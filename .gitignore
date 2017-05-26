@@ -9,7 +9,6 @@ __pycache__
 
 # large models
 models/*.csv
-!models/all_features.csv
 
 # Vim files
 *.swo
