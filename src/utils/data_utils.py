@@ -10,6 +10,7 @@ import csv
 import numpy as np
 
 def load_data(path=DATASET_URL, n_points_cap=None):
+  print("Initiating data loading")
   DESIRED_FIELDS = ['APL', 'AvgPktPerSec', 'IAT', 'NumForward', 'Protocol', 'BytesEx', 'BitsPerSec', 'NumPackets', 'StdDevLen', 'SameLenPktRatio', 'FPL', 'Duration', 'NPEx', 'Score']
   UNDESIRED_FIELDS = ['Source', 'Destination']
   fields_key = {}
@@ -35,11 +36,13 @@ def load_data(path=DATASET_URL, n_points_cap=None):
         for field in DESIRED_FIELDS:
           assert(field in fields_key)
         first_row = False
+        print("Header correlation complete")
         continue
 
       # Terminate if reached points cap
       if n_points_cap:
         if (n_points_cap > i):
+          print("Points cap reached. Data loading safely terminated early.")
           break
 
       # Process row
@@ -49,6 +52,7 @@ def load_data(path=DATASET_URL, n_points_cap=None):
       targets.append(target)
       key.append((row[unfields_key['Source']], row[unfields_key['Destination']]))
 
+  print("All rows processed")
   seq_points, seq_targets, total_len = sequentialify(points, targets, key)
   seq_train = seq_points[:-N_TEST]
   seq_test = seq_points[-N_TEST:]
@@ -57,6 +61,7 @@ def load_data(path=DATASET_URL, n_points_cap=None):
 
   len_training = total_len - N_TEST
   len_testing = N_TEST
+  print("Data loading complete")
 
   return {"x":np.array(seq_train), "y":np.array(seq_train), "targets":np.array(seq_train_targets)}, {"x":np.array(seq_test), "y":np.array(seq_test), "targets":np.array(seq_test_targets)}, len_training, len_testing
   

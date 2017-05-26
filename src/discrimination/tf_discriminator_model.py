@@ -107,9 +107,6 @@ class Attention_Discriminator:
     merged_sum = tf.merge_all_summaries()
     tf.initialize_all_variables().run()
     # self.saver = tf.train.Saver()
-    
-    print(training_data['x'])
-    print(training_data['targets'])
 
     for j in range(iterations):
       print("\n################\nIteration: ", j)
@@ -139,7 +136,7 @@ class Attention_Discriminator:
                 self.y: testing_data['y'][i:i + BATCH_S], 
                 self.target: testing_data['targets'][i:i + BATCH_S]
             }
-        att, __, testing_loss, testing_acc, summ = self.sess.run([self.att, self.optim, self.loss, self.acc, merged_sum], feed_dict = feed_dict)
+        att, testing_loss, testing_acc, summ = self.sess.run([self.att, self.loss, self.acc, merged_sum], feed_dict = feed_dict)
         total_testing_acc.append(testing_acc)
       print("Testing acc on test: ", np.mean(total_testing_acc))
 

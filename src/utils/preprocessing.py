@@ -21,6 +21,7 @@ def score_extraction(row, fields_key):
   return point, target
 
 def sequentialify(data, targets, key):
+  print("Initiating sequentificalication")
   seq_points = []
   seq_targets = []
   len_training = 0
