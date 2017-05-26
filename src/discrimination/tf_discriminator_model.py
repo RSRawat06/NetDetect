@@ -117,17 +117,23 @@ class Attention_Discriminator:
     
       # Run through training data
       for i in range(0, len_training, BATCH_S):
+        if len(training_data['x'][i:i+BATCH_S]) != BATCH_S:
+          print("Train loss: ", train_loss, "\nTrain acc on train: ", train_acc)
+          break
         feed_dict = {
                 self.x: np.array(training_data['x'][i:i + BATCH_S]), 
                 self.y: np.array(training_data['y'][i:i + BATCH_S]), 
                 self.target: np.array(training_data['targets'][i:i + BATCH_S])
             }
         att, __ , train_loss, train_acc, summ = self.sess.run([self.att,  self.optim, self.loss, self.acc, merged_sum], feed_dict = feed_dict)
-        print("Train loss: ", train_loss, "\nTrain acc on train: ", train_acc)
+        if i == (BATCH_S - len_training):
+          print("Train loss: ", train_loss, "\nTrain acc on train: ", train_acc)
 
       # Run through testing data
       total_testing_acc=[]
       for i in range(0, len_testing, BATCH_S):
+        if len(testing_data['x'][i:i+BATCH_S]) != BATCH_S:
+          break
         feed_dict = {
                 self.x: testing_data['x'][i:i + BATCH_S], 
                 self.y: testing_data['y'][i:i + BATCH_S], 

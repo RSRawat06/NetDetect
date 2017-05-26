@@ -51,7 +51,8 @@ def sequentialify(data, targets, key):
       seq_points.append(info['approved'][i:i+MAX_SEQUENCE_LENGTH])
       seq_targets.append(info['score'])
       # print("Approved: ", info['approved'][i:i+MAX_SEQUENCE_LENGTH])
-      print("Score: ", info['score'])
+      # print("Approved select: ", info['approved'][i])
+      # print("Score: ", info['score'])
       len_training += 1
 
   return np.array(seq_points), seq_targets, len_training

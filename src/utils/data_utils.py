@@ -50,15 +50,15 @@ def load_data(path=DATASET_URL, n_points_cap=None):
       key.append((row[unfields_key['Source']], row[unfields_key['Destination']]))
 
   seq_points, seq_targets, total_len = sequentialify(points, targets, key)
-  seq_train = seq_points[:-20]
-  seq_test = seq_points[-20:]
-  seq_train_targets = seq_targets[:-20]
-  seq_test_targets = seq_targets[-20:]
+  seq_train = seq_points[:-N_TEST]
+  seq_test = seq_points[-N_TEST:]
+  seq_train_targets = seq_targets[:-N_TEST]
+  seq_test_targets = seq_targets[-N_TEST:]
 
-  len_training = total_len - 20
-  len_testing = 20
+  len_training = total_len - N_TEST
+  len_testing = N_TEST
 
   return {"x":np.array(seq_train), "y":np.array(seq_train), "targets":np.array(seq_train_targets)}, {"x":np.array(seq_test), "y":np.array(seq_test), "targets":np.array(seq_test_targets)}, len_training, len_testing
   
-# load_data()
+load_data()
 
