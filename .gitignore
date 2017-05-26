@@ -1,0 +1,19 @@
+# Ignore large datasets
+data/*
+!data/tiny/*
+
+# Cache files
+__pycache__
+*.pyc
+.cache
+
+# large models
+models/*.csv
+!models/all_features.csv
+
+# Vim files
+*.swo
+*.swp
+
+# Ignore virtual environments
+venv*
