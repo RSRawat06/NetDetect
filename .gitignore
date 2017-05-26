@@ -1,6 +1,6 @@
 # Ignore large datasets
 data/*
-!data/tiny/*
+!data/.gitkeep
 
 # Cache files
 __pycache__
@@ -9,7 +9,6 @@ __pycache__
 
 # large models
 models/*.csv
-!models/all_features.csv
 
 # Vim files
 *.swo
@@ -17,3 +16,5 @@ models/*.csv
 
 # Ignore virtual environments
 venv*
+!venv/.gitkeep
+!venv/install_venv.sh
