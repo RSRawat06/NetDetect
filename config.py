@@ -1,5 +1,5 @@
 PROJ_ROOT = '/home/em/projects/smart/'
-DATASET_URL = PROJ_ROOT + "models/all.csv"
+DATASET_URL = PROJ_ROOT + "models/full_ISOT.csv"
 
 FRAMEWORK = "tensorflow"
 
