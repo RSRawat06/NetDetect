@@ -1,0 +1,2 @@
+model_checkpoint_path: "/home/em/projects/smart/models/tf_discrim"
+all_model_checkpoint_paths: "/home/em/projects/smart/models/tf_discrim"

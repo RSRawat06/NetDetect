@@ -14,5 +14,6 @@ import tensorflow as tf
 data = data_utils.load_data()
 with tf.Session() as sess:
   model = Attention_Discriminator(sess)
+  # model.load(PROJ_ROOT+"models/")
   model.build_model()
   model.train(*data, ITERATIONS)

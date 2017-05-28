@@ -1,5 +1,6 @@
 # Ignore large datasets
 data/*
+backup/*
 !data/.gitkeep
 
 # Cache files
@@ -9,6 +10,7 @@ __pycache__
 
 # large models
 models/*.csv
+!models/.gitkeep
 
 # Vim files
 *.swo
