@@ -1,7 +1,6 @@
 # Ignore large datasets
-data/*
-backup/*
-!data/.gitkeep
+data/ISOT/*
+!data/ISOT/.gitkeep
 
 # Cache files
 __pycache__
