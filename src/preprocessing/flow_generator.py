@@ -26,7 +26,7 @@ def modify_csv_rows(input_url=PROJ_ROOT+'data/data.csv', output_url=PROJ_ROOT+'d
           row.pop(2)
           row.pop(2)
         other = row[2]
-        if (other[0] == other [1]) and (other[1] == other[3]) and (other[3] == other[4]) and (other[4] == other[6]) and (other[6] == other[7]):
+        if other in ["bb:bb:bb:bb:bb:bb", "aa:aa:aa:aa:aa:aa", "cc:cc:cc:cc:cc:cc", "cc:cc:cc:dd:dd:dd"]:
           row[2] = 1
         else:
           row[2] = 0
