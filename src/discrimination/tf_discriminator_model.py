@@ -86,7 +86,7 @@ class Attention_Discriminator:
     ###################
 
     ### Loss functon
-    self.loss = -tf.reduce_sum(self.target * tf.log(self.pred) * tf.constant([1, 5], dtype=tf.float32), name="loss")
+    self.loss = -tf.reduce_sum(self.target * tf.log(self.pred) * tf.constant([1, 1], dtype=tf.float32), name="loss")
     ###################
 
     # Number of correct, not normalized

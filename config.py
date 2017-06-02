@@ -1,12 +1,12 @@
-PROJ_ROOT = '/home/em/projects/smart/'
-DATASET_URL = PROJ_ROOT + "models/full_ISOT.csv"
+PROJ_ROOT = '/home/em/projects/botnet/'
+DATASET_URL = PROJ_ROOT + "models/ISCX.csv"
 
 FRAMEWORK = "tensorflow"
 
 MAX_SEQUENCE_LENGTH = 5
 N_HIDDEN = 5
 BATCH_S = 300
-N_FEATURES = 13
+N_FEATURES = 76#13
 ITERATIONS = 50
 N_TEST = 10000
 

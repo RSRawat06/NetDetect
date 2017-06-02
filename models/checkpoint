@@ -1,2 +1,2 @@
-model_checkpoint_path: "/home/em/projects/smart/models/tf_discrim"
-all_model_checkpoint_paths: "/home/em/projects/smart/models/tf_discrim"
+model_checkpoint_path: "/home/em/projects/botnet/models/tf_discrim"
+all_model_checkpoint_paths: "/home/em/projects/botnet/models/tf_discrim"

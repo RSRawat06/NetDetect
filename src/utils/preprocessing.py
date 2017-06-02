@@ -6,23 +6,21 @@ from config import *
 import csv
 import numpy as np
 
-def score_extraction(row, fields_key):
-  point = np.empty(len(fields_key) - 1, dtype=np.float32)
+def point_extraction(row, fields_key):
+  point = np.empty(len(fields_key), dtype=np.float32)
   i = 0
   for field, index_ in fields_key.items():
-    if field == "Score":
-      if row[index_] == "0":
-        target = [1,0]
-      elif row[index_] == "1":
-        target = [0,1]
-      else:
-        raise Exception
-      continue
     point[i] = row[index_]
     i += 1
-  return point, target
+  return point
 
-def sequentialify(data, targets, supp_data):
+def is_malicious(ip):
+  if ip in ["192.168.2.112","131.202.243.84","192.168.5.122","198.164.30.2","192.168.2.110","192.168.4.118","192.168.2.113","192.168.1.103","192.168.4.120","192.168.2.112","192.168.2.109","192.168.2.105","147.32.84.180","147.32.84.170","147.32.84.150","147.32.84.140","147.32.84.130","147.32.84.160","10.0.2.15","192.168.106.141","192.168.106.131","172.16.253.130","172.16.253.131","172.16.253.129","172.16.253.240","74.78.117.238","158.65.110.24","192.168.3.35","192.168.3.25","192.168.3.65","172.29.0.116","172.29.0.109","172.16.253.132","192.168.248.165","10.37.130.4"]:
+    return [0, 1]
+  else:
+    return [1, 0]
+
+def sequentialify(data, supp_data):
   print("Initiating sequentificalication")
   
   sequence_match = []
@@ -36,17 +34,17 @@ def sequentialify(data, targets, supp_data):
       sequence_match[sequence_match_key[supp_data[i][0]]]['approved'].append(point)
     else:
       sequence_match_key[supp_data[i][0]] = len(sequence_match)
-      sequence_match.append({'approved':[point], 'score':targets[i]})
+      sequence_match.append({'approved':[point], 'score':is_malicious(supp_data[i][0])})
 
     # Handle dest
-    if (supp_data[i][1] in sequence_match_key):
-      sequence_match[sequence_match_key[supp_data[i][1]]]['approved'].append(point)
-    else:
-      sequence_match_key[supp_data[i][1]] = len(sequence_match)
-      sequence_match.append({'approved':[point], 'score':targets[i]})
+    # if (supp_data[i][1] in sequence_match_key):
+    #   sequence_match[sequence_match_key[supp_data[i][1]]]['approved'].append(point)
+    # else:
+    #   sequence_match_key[supp_data[i][1]] = len(sequence_match)
+    #   sequence_match.append({'approved':[point], 'score':targets[i]})
 
   del(data)
-  del(targets)
+  # del(targets)
   del(supp_data)
 
   seq_points = []

@@ -12,14 +12,14 @@ import numpy as np
 
 def load_data(path=DATASET_URL, n_points_cap=None):
   print("Initiating data loading")
-
-  DESIRED_FIELDS = ['APL', 'AvgPktPerSec', 'IAT', 'NumForward', 'Protocol', 'BytesEx', 'BitsPerSec', 'NumPackets', 'StdDevLen', 'SameLenPktRatio', 'FPL', 'Duration', 'NPEx', 'Score']
-  UNDESIRED_FIELDS = ['Source', 'Destination']
+  DESIRED_FIELDS = ["Flow Duration","Total Fwd Packets","Total Backward Packets","Total Length of Fwd Packets","Total Length of Bwd Packets","Fwd Packet Length Max","Fwd Packet Length Min","Fwd Packet Length Mean","Fwd Packet Length Std","Bwd Packet Length Max","Bwd Packet Length Min","Bwd Packet Length Mean","Bwd Packet Length Std","Flow Bytes/s","Flow Packets/s","Flow IAT Mean","Flow IAT Std","Flow IAT Max","Flow IAT Min","Fwd IAT Total","Fwd IAT Mean","Fwd IAT Std","Fwd IAT Max","Fwd IAT Min","Bwd IAT Total","Bwd IAT Mean","Bwd IAT Std","Bwd IAT Max","Bwd IAT Min","Fwd PSH Flags","Bwd PSH Flags","Fwd URG Flags","Bwd URG Flags","Fwd Header Length","Bwd Header Length","Fwd Packets/s","Bwd Packets/s","Min Packet Length","Max Packet Length","Packet Length Mean","Packet Length Std","Packet Length Variance","FIN Flag Count","SYN Flag Count","RST Flag Count","PSH Flag Count","ACK Flag Count","URG Flag Count","CWE Flag Count","ECE Flag Count","Down/Up Ratio","Average Packet Size","Avg Fwd Segment Size","Avg Bwd Segment Size","Fwd Header Length","Fwd Avg Bytes/Bulk","Fwd Avg Packets/Bulk","Fwd Avg Bulk Rate","Bwd Avg Bytes/Bulk","Bwd Avg Packets/Bulk","Bwd Avg Bulk Rate","Subflow Fwd Packets","Subflow Fwd Bytes","Subflow Bwd Packets","Subflow Bwd Bytes","Init_Win_bytes_forward","Init_Win_bytes_backward","act_data_pkt_fwd","min_seg_size_forward","Active Mean","Active Std","Active Max","Active Min","Idle Mean","Idle Std","Idle Max","Idle Min"]
+  # DESIRED_FIELDS = ['APL', 'AvgPktPerSec', 'IAT', 'NumForward', 'Protocol', 'BytesEx', 'BitsPerSec', 'NumPackets', 'StdDevLen', 'SameLenPktRatio', 'FPL', 'Duration', 'NPEx']
+  UNDESIRED_FIELDS = ['Source IP', 'Destination IP']
   fields_key = {}
   unfields_key = {}
 
   points = []
-  targets = []
+  # targets = []
   key = []
 
   i = 0
@@ -32,12 +32,14 @@ def load_data(path=DATASET_URL, n_points_cap=None):
       if first_row:
         j = 0
         for field in row:
+          print(field)
           if field in DESIRED_FIELDS:
             fields_key[field] = j
           if field in UNDESIRED_FIELDS:
             unfields_key[field] = j
           j += 1
         for field in DESIRED_FIELDS:
+          print(fields_key)
           assert(field in fields_key)
         first_row = False
         print("Header correlation complete")
@@ -51,17 +53,17 @@ def load_data(path=DATASET_URL, n_points_cap=None):
       i += 1
 
       # Process row
-      point, target = score_extraction(row, fields_key)
+      point = point_extraction(row, fields_key)
 
       points.append(point)
-      targets.append(target)
-      key.append((row[unfields_key['Source']], row[unfields_key['Destination']]))
+      # targets.append(target)
+      key.append((row[unfields_key['Source IP']], row[unfields_key['Destination IP']]))
 
 
   print("All rows processed")
-  seq_points, seq_targets, total_len = sequentialify(points, targets, key)
+  seq_points, seq_targets, total_len = sequentialify(points, key)
   del(points)
-  del(targets)
+  # del(targets)
   del(key)
   
   shuffle_points_mid = []

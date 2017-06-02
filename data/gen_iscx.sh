@@ -1,0 +1,10 @@
+./gen_data.sh ISCX/small_00000_20110810020140.pcap
+./gen_data.sh ISCX/small_00001_20110819015509.pcap
+./gen_data.sh ISCX/small_00002_20071008071542.pcap
+./gen_data.sh ISCX/small_00003_20071008105429.pcap
+./gen_data.sh ISCX/small_00004_20100612001505.pcap
+./gen_data.sh ISCX/small_00005_20100612020932.pcap
+./gen_data.sh ISCX/small_00006_20100612033546.pcap
+./gen_data.sh ISCX/small_00007_20100612072024.pcap
+./gen_data.sh ISCX/small_00008_20100612120259.pcap
+./gen_data.sh ISCX/small_00009_20100612165935.pcap

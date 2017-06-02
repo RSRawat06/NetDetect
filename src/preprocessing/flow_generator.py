@@ -13,7 +13,7 @@ def modify_csv_rows(input_url=PROJ_ROOT+'data/data.csv', output_url=PROJ_ROOT+'d
   with open(output_url, 'w') as new:
     newWriter = csv.writer(new, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
     with open(input_url) as csvfile:
-      newWriter.writerow(['Source Port', 'Destination Port', 'Score', 'Source', 'Destination', 'Protocol', 'IP_Flags', 'Length', 'Protocols in frame', 'Time', 'tcp_Flags', 'TCP Segment Len', 'udp_Length'])
+      newWriter.writerow(['Source Port', 'Destination Port', 'Eth', 'Source', 'Destination', 'Protocol', 'IP_Flags', 'Length', 'Protocols in frame', 'Time', 'tcp_Flags', 'TCP Segment Len', 'udp_Length'])
       first = True
       for row in csv.reader(csvfile, delimiter=',', quotechar='"'):
         if first == True:
@@ -25,11 +25,6 @@ def modify_csv_rows(input_url=PROJ_ROOT+'data/data.csv', output_url=PROJ_ROOT+'d
         else:
           row.pop(2)
           row.pop(2)
-        other = row[2]
-        if other in ["bb:bb:bb:bb:bb:bb", "aa:aa:aa:aa:aa:aa", "cc:cc:cc:cc:cc:cc", "cc:cc:cc:dd:dd:dd"]:
-          row[2] = 1
-        else:
-          row[2] = 0
         newWriter.writerow(row) 
       print("Csv row modification complete\n##############################")
 
@@ -61,7 +56,6 @@ def flow_separator(input_url=PROJ_ROOT+'data/modified_data.csv', output_url=PROJ
   startTime = None   ##Start Time of each flow to implement timeout
 
   for row in sorted_flow:
-    
     # Means prev is set to none so no previous flow to continue
     if prev_flow_id is None:
       if startTime is None:
