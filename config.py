@@ -1,4 +1,4 @@
-PROJ_ROOT = '/home/em/projects/smart/'
+PROJ_ROOT = '/home/em/projects/botnet/'
 DATASET_URL = PROJ_ROOT + "models/full_ISOT.csv"
 
 FRAMEWORK = "tensorflow"
