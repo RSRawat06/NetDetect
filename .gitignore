@@ -1,6 +1,8 @@
 # Ignore large datasets
 data/ISOT/*
 !data/ISOT/.gitkeep
+data/ISCX/*
+!data/ISCX/.gitkeep
 
 # Cache files
 __pycache__
