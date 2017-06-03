@@ -26,9 +26,11 @@ def sequentialify(data, supp_data):
   sequence_match = []
   sequence_match_key = {}
 
-  # Assign to streams
+  # We create a key for each ip in seq_match_key
+  # All points containing that ip are added to that seq_match_key
+  # That ip gets a label depending on whether it is malicious or not
+  # Yes, that means each point shows up twice technically
   for i, point in enumerate(data):
-
     # Handle src
     if (supp_data[i][0] in sequence_match_key):
       sequence_match[sequence_match_key[supp_data[i][0]]]['approved'].append(point)
@@ -37,11 +39,11 @@ def sequentialify(data, supp_data):
       sequence_match.append({'approved':[point], 'score':is_malicious(supp_data[i][0])})
 
     # Handle dest
-    # if (supp_data[i][1] in sequence_match_key):
-    #   sequence_match[sequence_match_key[supp_data[i][1]]]['approved'].append(point)
-    # else:
-    #   sequence_match_key[supp_data[i][1]] = len(sequence_match)
-    #   sequence_match.append({'approved':[point], 'score':targets[i]})
+    if (supp_data[i][1] in sequence_match_key):
+      sequence_match[sequence_match_key[supp_data[i][1]]]['approved'].append(point)
+    else:
+      sequence_match_key[supp_data[i][1]] = len(sequence_match)
+      sequence_match.append({'approved':[point], 'score':is_malicious(supp_data[i][1])})
 
   del(data)
   # del(targets)
