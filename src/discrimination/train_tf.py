@@ -11,7 +11,7 @@ import data_utils
 
 import tensorflow as tf
 
-data = data_utils.load_data()
+data = data_utils.load_data(n_points_cap=100000)
 with tf.Session() as sess:
   model = Attention_Discriminator(sess)
   # model.load(PROJ_ROOT+"models/")

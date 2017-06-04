@@ -32,14 +32,12 @@ def load_data(path=DATASET_URL, n_points_cap=None):
       if first_row:
         j = 0
         for field in row:
-          print(field)
           if field in DESIRED_FIELDS:
             fields_key[field] = j
           if field in UNDESIRED_FIELDS:
             unfields_key[field] = j
           j += 1
         for field in DESIRED_FIELDS:
-          print(fields_key)
           assert(field in fields_key)
         first_row = False
         print("Header correlation complete")
@@ -47,7 +45,7 @@ def load_data(path=DATASET_URL, n_points_cap=None):
 
       # Terminate if reached points cap
       if n_points_cap:
-        if (n_points_cap > i):
+        if (n_points_cap < i):
           print("Points cap reached. Data loading safely terminated early.")
           break
       i += 1
