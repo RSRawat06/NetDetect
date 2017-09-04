@@ -3,6 +3,30 @@ Botnet detection in enterprise networks using recurrent neural networks with att
 
 [![Maintenance Intended](http://maintained.tech/badge.svg)](http://maintained.tech/)
 
+### What's special
+* Applying recurrent networks to not only sequences of packets, but higher level sequences of flows
+* Using attention mechanisms to better identify patterns hiding in the relationships between packets and flows
+* Leverage end-to-end differentiability to learn minimally supervised packet-level encoding
+
+### Installation
+To get Docker started:
+
+`docker-compose up --build`
+
+`bash access_cluster.sh`
+
+To download models:
+
+`python3 -m botnet_attention.isot.download`
+
+`python3 -m botnet_attention.iscx.download`
+
+To run training:
+
+`python3 -m botnet_attention.isot.train`
+
+`python3 -m botnet_attention.iscx.train`
+
 ### Overview
 This codebase offers:
 * Download and loading scripts for ISOT and ISCX datasets
@@ -16,22 +40,6 @@ compose a sequence of packets
 * Self-attention RNN to predict infection status given a sequence of network flows which each
 compose a sequence of packets
 
-### What's special
-* Applying recurrent networks to not only sequences of packets, but higher level sequences of flows
-* Using attention mechanisms to better identify patterns hiding in the relationships between packets and flows
-* Leverage end-to-end differentiability to learn minimally supervised packet-level encoding
-
-### Installation
-`docker-compose up --build`
-`bash access_cluster.sh`
-To download ISOT model:
-Inside of Docker container: `python3 -m botnet_attention.isot.download`
-To download ISCX model:
-Inside of Docker container: `python3 -m botnet_attention.iscx.download`
-To run training for ISOT:
-Inside of Docker container: `python3 -m botnet_attention.isot.train`
-To run training for ISCX:
-Inside of Docker container: `python3 -m botnet_attention.iscx.train`
 
 ### Contributions
 Feel free to make a pull request if you have any suggestions.
