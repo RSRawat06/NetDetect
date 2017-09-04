@@ -1,23 +1,11 @@
-# Ignore large datasets
-data/ISOT/*
-!data/ISOT/.gitkeep
-data/ISCX/*
-!data/ISCX/.gitkeep
-
 # Cache files
-__pycache__
-*.pyc
-.cache
+*/__pycache__
+*/*.pyc
+*/.cache
 
-# large models
-models/*.csv
-!models/.gitkeep
+# Keep .gitkeep
+!*/.gitkeep
 
 # Vim files
-*.swo
-*.swp
-
-# Ignore virtual environments
-venv*
-!venv/.gitkeep
-!venv/install_venv.sh
+*/*.swo
+*/*.swp

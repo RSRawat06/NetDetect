@@ -9,6 +9,7 @@ import tensorflow as tf
 from .. import models
 from . import load, config
 
+
 if __name__ == "__main__":
   data = load.fetch_data()
   with tf.Session() as sess:
