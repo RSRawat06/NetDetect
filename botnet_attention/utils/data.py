@@ -1,14 +1,24 @@
+'''
+Module to handle the import and preprocessing of datasets
+'''
+
+
 import csv
 import numpy as np
-from preprocess import parse_feature, shuffle_points
+from preprocess import parse_row, shuffle_points
 from segmenter import segment_packets, segment_flows
 
 
-def load(config):
+def load(config, parse_feature):
+  '''
+  Load dataset fetching functions
+  '''
   def fetch(path=config.DATA_DIR + config.DATA_NAME):
+    '''
+    Fetch and preprocess dataset
+    '''
     X = []
     Y = []
-    flow_ids = []
     metadata = []
 
     fields_key = []
@@ -28,38 +38,19 @@ def load(config):
             print("Points cap reached. Data loading safely terminated early.")
             break
 
-        # Generate feature vectors
-        feature_vector = []
-        participant_ips = []
-        for j, field in enumerate(row):
-          if fields_key[j] == "Score":
-            score = parse_feature(fields_key[j], field, config)
-          elif fields_key[j] == "FlowNo.":
-            flow_id = field
-          elif fields_key[j] == "Source":
-            participant_ips.append(field)
-          elif fields_key[j] == "Destination":
-            participant_ips.append(field)
-          else:
-            try:
-              feature_vector += parse_feature(fields_key[j], field, config)
-            except ValueError:
-              continue
-
-        # Add new point to the record
+        # Parse row
+        feature_vector, score, flow_id, participant_ips = parse_row(row, fields_key, parse_feature)
         X.append(feature_vector)
         Y.append(score)
-        flow_ids.append(flow_id)
-        metadata.append(participant_ips)
+        metadata.append({"participant_ips": participant_ips, "flow_id": flow_id})
 
-    print("All rows processed")
-    X, Y, metadata = segment_packets(X, Y, flow_ids, metadata, config)
+    X, Y = segment_packets(X, Y, metadata, config.MAX_FLOW_LENGTH)
 
-    if config.FLOW_SEQUENCES:
-      X, Y = segment_flows(X, Y, metadata, config)
+    if config.USE_FLOW_SEQUENCES:
+      X, Y = segment_flows(X, Y, metadata, config.MAX_FLOW_SEQUENCE_LENGTH)
 
     # Shuffle data points
-    X, Y = shuffle_points(X, Y, config)
+    X, Y = shuffle_points(X, Y, config.SHUFFLE_PARTITION_LEN)
 
     # Calculate total true/false
     total_true = 0
@@ -74,17 +65,12 @@ def load(config):
     print("Percentage true: ", 100 * total_true / (total_true + total_false))
 
     # Partition training/test data
-    seq_train = X[:-config.N_TEST]
-    seq_train_targets = Y[:-config.N_TEST]
-    seq_test = X[-config.N_TEST:]
-    seq_test_targets = Y[-config.N_TEST:]
-    # seq_validation = X[-config.N_TEST:]
-    # seq_validation_targets = Y[-config.N_TEST:]
-    print("Data loading complete")
+    train_X = np.array(X[:-config.N_TEST])
+    train_Y = np.array(Y[:-config.N_TEST])
+    test_X = np.array(X[-config.N_TEST:])
+    test_Y = np.array(Y[-config.N_TEST:])
 
     # Return end result
-    len_training = len(Y) - config.N_TEST
-    len_testing = config.N_TEST
-    return {"x": np.array(seq_train), "y": np.array(seq_train), "targets": np.array(seq_train_targets)}, {"x": np.array(seq_test), "y": np.array(seq_test), "targets": np.array(seq_test_targets)}, len_training, len_testing
+    return {"X": train_X, "Y": train_Y}, {"X": test_X, "Y": test_Y}
 
 
