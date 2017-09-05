@@ -1,4 +1,5 @@
 from ...utils import preprocess
+import numpy as np
 
 
 def test_parse_row():
@@ -30,30 +31,24 @@ def test_parse_row():
 
     return value, is_flow_id, is_score, is_participant_ip, is_feature
 
-  assert(([323, 23, 0, 1], 1, 5, [4]) == preprocess.parse_row([323, '23', 'apple', 5.0, 3.0, 4], {"size": 0, "width": 1, "type": 2, "flow_id": 3, "score": 4, "ip": 5}, parse_feature))
-  assert(([22, 14, 1, 0], 1, 9, [4, 8]) == preprocess.parse_row([22.5, '14', 'pear', 9.0, 0, 4, 8], {"size": 0, "width": 1, "type": 2, "flow_id": 3, "score": 4, "ip": 5, "ip2": 6}, parse_feature))
+  assert(([323, 23, 0, 1], 1, 5, [4]) == preprocess.parse_row([323, '23', 'apple', 5.0, 3.0, 4], {0: "size", 1: "width", 2: "type", 3: "flow_id", 4: "score", 5: "ip"}, parse_feature))
+  assert(([22, 14, 1, 0], 0, 9, [4, 8]) == preprocess.parse_row([22.5, '14', 'pear', 9.0, 0, 4, 8], {0: "size", 1: "width", 2: "type", 3: "flow_id", 4: "score", 5: "ip", 6: "ip2"}, parse_feature))
 
 
 def test_shuffle_points():
   x, y = preprocess.shuffle_points(list(range(100)), list(range(100)), 10)
-  assert(type(x[0]) == 1)
   assert(len(x) == 100)
-  assert(len(range(100)) == x.sort())
-  assert(type(y[0]) == 1)
+  assert(np.all(list(range(100)) == np.sort(x)))
   assert(len(y) == 100)
-  assert(len(range(100)) == y.sort())
+  assert(np.all(list(range(100)) == np.sort(y)))
   x, y = preprocess.shuffle_points(list(range(100)), list(range(100)), 3)
-  assert(type(x[0]) == 1)
   assert(len(x) == 100)
-  assert(len(range(100)) == x.sort())
-  assert(type(y[0]) == 1)
+  assert(np.all(list(range(100)) == np.sort(x)))
   assert(len(y) == 100)
-  assert(len(range(100)) == y.sort())
+  assert(np.all(list(range(100)) == np.sort(y)))
   x, y = preprocess.shuffle_points(list(range(100)), list(range(100)), 120)
-  assert(type(x[0]) == 1)
   assert(len(x) == 100)
-  assert(len(range(100)) == x.sort())
-  assert(type(y[0]) == 1)
+  assert(np.all(list(range(100)) == np.sort(x)))
   assert(len(y) == 100)
-  assert(len(range(100)) == y.sort())
+  assert(np.all(list(range(100)) == np.sort(y)))
 

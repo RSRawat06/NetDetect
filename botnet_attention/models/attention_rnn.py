@@ -5,10 +5,7 @@ Ignore for now.
 """
 
 
-import sys, os
-
-sys.path.append(os.getcwd())
-from config import *
+from .config import *
 
 import tensorflow as tf
 import numpy as np

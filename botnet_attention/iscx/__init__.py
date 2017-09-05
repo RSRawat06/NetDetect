@@ -9,4 +9,4 @@ To download the ISCX dataset, please run
 `python3 -m botnet_attention.iscx.download`.
 """
 
-from . import train, download, config
+from . import train, download, config, load

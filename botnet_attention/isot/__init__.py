@@ -9,4 +9,4 @@ To download the ISOT dataset, please run
 `python3 -m botnet_attention.isot.download`.
 """
 
-from . import train, download, config
+from . import train, download, config, load

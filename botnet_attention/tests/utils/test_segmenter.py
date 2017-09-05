@@ -51,7 +51,7 @@ def test_segment_flows():
   X = [list(range(x, x + 10)) for x in range(100)]
   # X: [0, 1... 10], [1, 2... 11]... [99, 100... 109]
   # X.shape: (100, 10)
-  Y = [[int(float(x) / 2), int(float(x) / 2) + 1] for x in range(100, 200)]
+  Y = [[int(float(x) / 8), int(float(x) / 8) + 1] for x in range(0, 100)]
   # Y: [50, 51], [50, 51], [51, 52], [51, 52]... [99, 100], [99, 100]
   # Y.shape: (100, 2)
 
@@ -73,6 +73,8 @@ def test_segment_flows():
   # member_map.shape = (25, 2, 3, 10) or (25, 4, 3, 10)
 
   X, Y = segmenter.segment_flows(new_X, new_Y, metadata, 2)
-  assert(X.shape == (48, 3, 10))
-  assert(Y.shape == (48, 2))
+  assert(X.shape == (24, 2, 3, 10))
+  assert(Y.shape == (24, 2))
+  # each data point has (flows, packets, features)
+  # each y has (2)
 

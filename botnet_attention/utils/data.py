@@ -5,8 +5,8 @@ Module to handle the import and preprocessing of datasets
 
 import csv
 import numpy as np
-from preprocess import parse_row, shuffle_points
-from segmenter import segment_packets, segment_flows
+from .preprocess import parse_row, shuffle_points
+from .segmenter import segment_packets, segment_flows
 
 
 def load(config, parse_feature):
@@ -72,5 +72,5 @@ def load(config, parse_feature):
 
     # Return end result
     return {"X": train_X, "Y": train_Y}, {"X": test_X, "Y": test_Y}
-
+  return fetch
 

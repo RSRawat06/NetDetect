@@ -48,5 +48,5 @@ def parse_feature(field, raw_value):
   return value, is_flow_id, is_score, is_participant_ip, is_feature
 
 
-fetch_data = data.load(config, parse_feature).fetch
+fetch_data = data.load(config, parse_feature)
 

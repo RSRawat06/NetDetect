@@ -1,4 +1,4 @@
-FROM ubuntu:13.10
+FROM ubuntu:16.04
 
 RUN apt-get update \
     && apt-get upgrade -y \
@@ -16,7 +16,7 @@ RUN apt-get update \
     && apt-get autoremove \
     && apt-get clean
 
-RUN apt-get install tshark -y
+# RUN apt-get install tshark -y
 
 RUN pip install -U "setuptools==3.4.1"
 RUN pip install -U "pip==1.5.4"
@@ -25,7 +25,7 @@ RUN pip install -U "pip==1.5.4"
 WORKDIR /service
 
 # Copying pip requirement files
-COPY ./requirements.txt ./requirements.txt
+COPY ./flow_featurization/requirements.txt ./requirements.txt
 
 # Install python dependencies
 RUN export C_INCLUDE_PATH=/usr/include
