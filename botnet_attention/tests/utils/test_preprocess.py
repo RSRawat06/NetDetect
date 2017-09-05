@@ -1,4 +1,4 @@
-from ...botnet_attention.utils import preprocess
+from ...utils import preprocess
 
 
 def test_parse_row():

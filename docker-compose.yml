@@ -11,9 +11,19 @@ services:
       - 5000:5000
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./botnet_attention/Dockerfile
     volumes:
-      - ./:/service
+      - ./botnet_attention:/service
+    networks:
+      - default
+    tty: true
+
+  featurization:
+    build:
+      context: .
+      dockerfile: ./flow_featurization/Dockerfile
+    volumes:
+      - ./flow_featurization:/service
     networks:
       - default
     tty: true

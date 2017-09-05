@@ -1,4 +1,4 @@
-from ...botnet_attention.utils import segmenter
+from ...utils import segmenter
 import numpy as np
 
 

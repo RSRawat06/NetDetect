@@ -1,4 +1,4 @@
-from ...botnet_attention.utils import network
+from ...utils import network
 from . import test_config as config
 
 

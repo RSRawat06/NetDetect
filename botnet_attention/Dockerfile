@@ -2,7 +2,7 @@ From tensorflow/tensorflow:latest-py3
 
 # Install apk packages
 RUN apt update \
-  && apt install gcc make libc-dev g++ bzip2 libssl-dev build-essential tshark -y
+  && apt install gcc make libc-dev g++ bzip2 libssl-dev build-essential -y
 
 # Establish working directory
 WORKDIR /service

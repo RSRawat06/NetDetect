@@ -1,3 +1,5 @@
 pytest==3.2.1
 numpy
 h5py
+requests
+sklearn
