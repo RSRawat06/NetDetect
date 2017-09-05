@@ -1,11 +1,11 @@
 # Cache files
-*/__pycache__
-*/*.pyc
-*/.cache
+**/__pycache__
+**/*.pyc
+**/.cache
 
 # Keep .gitkeep
-!*/.gitkeep
+!**/.gitkeep
 
 # Vim files
-*/*.swo
-*/*.swp
+**/*.swo
+**/*.swp
