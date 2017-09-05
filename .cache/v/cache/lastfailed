@@ -1,6 +1,0 @@
-{
-  "tests/isot/test_load.py": true,
-  "tests/utils/test_network.py": true,
-  "tests/utils/test_preprocess.py": true,
-  "tests/utils/test_segmenter.py": true
-}
