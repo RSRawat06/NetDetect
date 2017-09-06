@@ -1,97 +1,88 @@
-import sys, os  
-
-sys.path.append(os.getcwd())
-from config import *
-
 import tensorflow as tf
 import numpy as np
-import random, time
+import time
+from . import config
 
 tf.logging.set_verbosity(tf.logging.ERROR)
+ITERATIONS, N_BATCHES, N_FLOWS, N_PACKETS, N_FEATURES = config.basic
+N_HIDDEN_P, N_HIDDEN_A_P, R_P = config.packets
+N_HIDDEN_F, N_HIDDEN_A_F, R_F = config.packets
 
-class Attention_Discriminator:
+
+class Self_Attention():
   def __init__(self, sess):
-    # Initialize with setting
     self.sess = sess
 
+  def save(self):
+    self.saver.save(self.sess, config.MODEL_DIR + config.DOUBLE_MODEL_NAME)
+
   def load(self, model_url):
-    self.saver = tf.train.import_meta_graph(model_url)
-    self.saver.restore(self.sess, tf.train.latest_checkpoint('./'))
+    self.saver = tf.train.import_meta_graph(config.MODEL_DIR + config.DOUBLE_META_NAME)
+    self.saver.restore(self.sess, tf.train.latest_checkpoint(config.MODEL_DIR))
     self.sess.run(tf.global_variables_initializer())
 
   def build_model(self):
     # Set initial vars
-    self.x = tf.placeholder(tf.float32, [BATCH_S, MAX_SEQUENCE_LENGTH, N_FEATURES], name="horizontal")
-    self.y = tf.placeholder(tf.float32, [BATCH_S, MAX_SEQUENCE_LENGTH, N_FEATURES], name="vertical")
-    self.target = tf.placeholder(tf.float32, [BATCH_S, 1], name="target")  
+    self.x = tf.placeholder(tf.float32, [N_BATCHES, N_FLOWS, N_PACKETS, N_FEATURES])
+    self.target = tf.placeholder(tf.float32, [N_BATCHES, 1], name="target")
 
-    # Encode x
-    with tf.variable_scope("encode_x"):
-      self.fwd_lstm = tf.nn.rnn_cell.BasicLSTMCell(N_HIDDEN, state_is_tuple=True)
-      self.x_output, self.x_state = tf.nn.dynamic_rnn(cell=self.fwd_lstm, inputs=self.x, dtype=tf.float32)
+    ##############################
 
-    # Encode y
-    with tf.variable_scope("encode_y"):
-      self.fwd_lstm = tf.nn.rnn_cell.BasicLSTMCell(N_HIDDEN, state_is_tuple=True)
-      self.y_output, self.y_state = tf.nn.dynamic_rnn(cell=self.fwd_lstm, inputs=self.y, initial_state=self.x_state, dtype=tf.float32)
+    self.fwd_lstm_p = tf.nn.rnn_cell.BasicGRUCell(N_HIDDEN_P)
+    self.bwd_lstm_p = tf.nn.rnn_cell.BasicGRUCell(N_HIDDEN_P)
 
-    # Get Y
-    self.Y = self.x_output  
+    self.H_p, _, _ = tf.nn.rnn.static_bidirectional_rnn(self.fwd_lstm_p, self.bwd_lstm_p, self.x)
+    # Shape: (n_batches, n_flows, n_packets, 2u)
 
-    ### Build W^y
-    self.W_Y = tf.get_variable("W_Y", shape=[N_HIDDEN, N_HIDDEN])
-    unshaped_M_left = tf.matmul(tf.reshape(self.Y, shape=[BATCH_S * MAX_SEQUENCE_LENGTH, N_HIDDEN]), self.W_Y, name="M_left")
-    self.M_left = tf.reshape(unshaped_M_left, shape=[BATCH_S, MAX_SEQUENCE_LENGTH, N_HIDDEN])
-    ################
+    self.W_s1_p = tf.get_variable("W_s1_p", shape=[N_HIDDEN_A_P, 2 * N_HIDDEN_P])
+    self.W_s2_p = tf.get_variable("W_s2_p", shape=[R_P, N_HIDDEN_A_P])
 
-    ### Get h_n repeated
-    y_transposed = tf.transpose(self.y_output, [1, 0, 2])
-    self.h_n = tf.gather(y_transposed, int(y_transposed.get_shape()[0]) - 1)
-    self.h_n_e = tf.expand_dims(self.h_n, 1)
-    e_l = tf.pack([1, MAX_SEQUENCE_LENGTH, 1])
-    self.h_n_e = tf.tile(self.h_n_e, e_l)
-    ################
+    self.A_p = tf.softmax(tf.matmul(self.W_s2_p, tf.tanh(tf.matmul(self.W_s1_p, tf.transpose(self.H_p)))))
+    # Shape: (r, n_packets)
 
-    ### Build W^h
-    self.W_h = tf.get_variable("W_h", shape=[N_HIDDEN, N_HIDDEN])
-    unshaped_M_right = tf.matmul(tf.reshape(self.h_n_e, shape=[BATCH_S * MAX_SEQUENCE_LENGTH, N_HIDDEN]), self.W_h)
-    self.M_right = tf.reshape(unshaped_M_right, shape=[BATCH_S, MAX_SEQUENCE_LENGTH, N_HIDDEN], name="M_right")
-    #################
+    self.M_p = tf.matmul(self.A_p, self.H_p)
+    # Shape: (n_batches, n_flows, r, 2u)
 
-    #### The beautiful beautiful attention mechanism ####
-    self.M = tf.tanh(tf.add(self.M_left, self.M_right), name="M")
-    self.W_att = tf.get_variable("W_att",shape=[N_HIDDEN,1]) 
+    self.M_p_reshaped = tf.reshape(self.M_p, (N_BATCHES, N_FLOWS, R_P * 2 * N_HIDDEN_P))
+    # Shape: (n_batches, n_flows, r * 2u)
 
-    alpha = tf.matmul(tf.reshape(self.M, shape=[BATCH_S * MAX_SEQUENCE_LENGTH, N_HIDDEN]), self.W_att)
-    self.att = tf.nn.softmax(tf.reshape(alpha, shape=[BATCH_S, 1, MAX_SEQUENCE_LENGTH], name="att")) 
+    ##############################
 
-    self.r = tf.reshape(tf.batch_matmul(self.att, self.Y, name="r"),shape=[BATCH_S, N_HIDDEN])
-    ####################################################
+    self.fwd_lstm_f = tf.nn.rnn_cell.BasicGRUCell(N_HIDDEN_F)
+    self.bwd_lstm_f = tf.nn.rnn_cell.BasicGRUCell(N_HIDDEN_F)
 
-    ### Build W_p (b_p is bias)
-    self.W_p, self.b_p= tf.get_variable("W_p", shape=[N_HIDDEN, N_HIDDEN]), tf.get_variable("b_p",shape=[N_HIDDEN],initializer=tf.constant_initializer())
-    self.Wpr = tf.matmul(self.r, self.W_p, name="Wy") + self.b_p
-    ###################
+    self.H_f, _, _ = tf.nn.rnn.static_bidirectional_rnn(self.fwd_lstm_f, self.bwd_lstm_f, self.M_p_reshaped)
+    # Shape: (n_batches, n_flows, 2u)
 
-    ### Build W_x
-    self.W_x, self.b_x = tf.get_variable("W_x", shape=[N_HIDDEN, N_HIDDEN]), tf.get_variable("b_x",shape=[N_HIDDEN],initializer=tf.constant_initializer())
-    self.Wxhn = tf.matmul(self.h_n, self.W_x, name="Wxhn") + self.b_x
-    ###################
+    self.W_s1_f = tf.get_variable("W_s1_f", shape=[N_HIDDEN_A_F, 2 * N_HIDDEN_F])
+    self.W_s2_f = tf.get_variable("W_s2_f", shape=[R_F, N_HIDDEN_A_F])
 
-    ### Reached the end :)
-    self.hstar = tf.tanh(tf.add(self.Wpr, self.Wxhn), name="hstar")
-    self.W_pred = tf.get_variable("W_pred", shape=[N_HIDDEN, 1])
-    self.pred = tf.nn.softmax(tf.matmul(self.hstar, self.W_pred), name="pred_layer")
-    ###################
+    self.A_f = tf.softmax(tf.matmul(self.W_s2_f, tf.tanh(tf.matmul(self.W_s1_f, tf.transpose(self.H_f)))))
+    # Shape: (r, n_flows)
 
-    ### Loss function
-    self.loss = -tf.reduce_sum(self.target * tf.log(self.pred), name="loss")
-    ###################
+    self.M_f = tf.matmul(self.A_f, self.H_f)
+    # Shape: (n_batches, r, 2u)
+
+    self.M_f_reshaped = tf.reshape(self.M_f, (N_BATCHES, R_F * 2 * N_HIDDEN_F))
+    # Shape: (n_batches, r * 2u)
+
+    ##############################
+
+    self.W_final = tf.get_variable("W_final", shape=[R_F * 2 * N_HIDDEN_F, 2])
+    self.prediction = tf.nn.softmax(tf.matmul(self.M_f_reshaped, self.W_final))
+
+    self.standard_loss = self.target * tf.log(self.prediction)
+    self.packet_reg_weight = tf.constant(0.1)
+    self.packet_attention_regularization = self.packet_reg_weight * tf.pow(tf.norm(tf.matmul(self.A_p, tf.transpose(self.A_p)) - tf.identity(R_P)), 0)
+    self.flow_reg_weight = tf.constant(0.1)
+    self.flow_attention_regularization = self.flow_reg_weight * tf.pow(tf.norm(tf.matmul(self.A_f, tf.transpose(self.A_f)) - tf.identity(R_F)), 2)
+
+    self.loss = -tf.reduce_sum(self.standard_loss + self.packet_attention_regularization + self.flow_attention_regularization)
+
+    ##############################
 
     # Number of correct, not normalized
-    correct = tf.equal(tf.argmax(self.pred,1),tf.argmax(self.target,1))
-    # Number of correct, not normalized
-    correct = tf.equal(tf.argmax(self.pred,1),tf.argmax(self.target,1))
+    correct = tf.equal(tf.argmax(self.prediction, 1), tf.argmax(self.target, 1))
     # Accuracy
     self.acc = tf.reduce_mean(tf.cast(correct, "float"), name="accuracy")
 
@@ -99,42 +90,36 @@ class Attention_Discriminator:
     self.optimizer = tf.train.AdamOptimizer()
     self.optim = self.optimizer.minimize(self.loss, var_list=tf.trainable_variables())
 
-    __ = tf.scalar_summary("loss", self.loss)
-
-  def train(self, training_data, testing_data, len_training, len_testing, iterations):
+  def train(self, training_data, testing_data):
 
     # Initializing tf + timing
-    merged_sum = tf.merge_all_summaries()
-    tf.initialize_all_variables().run()
-    self.saver = tf.train.Saver()
+    tf.global_variables_initializers().run()
+    self.saver = tf.train.Saver(tf.global_variables())
 
-    for j in range(iterations):
+    for j in range(ITERATIONS):
       print("\n################\nIteration: ", j)
       start_time = time.time()
-    
+
       # Run through training data
-      for i in range(0, BATCH_S, len_training):
+      for i in range(0, N_BATCHES, len(training_data['targets'])):
         feed_dict = {
-                self.x: training_data['x'][i:i + BATCH_S], 
-                self.y: training_data['y'][i:i + BATCH_S], 
-                self.target: training_data['targets'][i:i + BATCH_S]
-            }
-        att, __ , train_loss, train_acc, summ = self.sess.run([self.att,  self.optim, self.loss, self.acc, merged_sum], feed_dict = feed_dict)
+            self.x: training_data['x'][i:i + N_BATCHES],
+            self.target: training_data['targets'][i:i + N_BATCHES]
+        }
+        __, train_loss, train_acc = self.sess.run([self.optim, self.loss, self.acc], feed_dict=feed_dict)
         print("Train loss: ", train_loss, "\nTrain acc on train: ", train_acc)
 
       # Run through testing data
-      total_testing_acc=[]
-      for i in range(0, BATCH_S, len_testing):
+      total_testing_acc = []
+      for i in range(0, N_BATCHES, len(testing_data['targets'])):
         feed_dict = {
-                self.x: testing_data['x'][i:i + BATCH_S], 
-                self.y: testing_data['y'][i:i + BATCH_S], 
-                self.target: testing_data['targets'][i:i + BATCH_S]
-            }
-        att, __, testing_loss, testing_acc, summ = self.sess.run([self.att, self.optim, self.loss, self.acc, merged_sum], feed_dict = feed_dict)
+            self.x: testing_data['x'][i:i + N_BATCHES],
+            self.target: testing_data['targets'][i:i + N_BATCHES]
+        }
+        __, testing_loss, testing_acc = self.sess.run([self.optim, self.loss, self.acc], feed_dict=feed_dict)
         total_testing_acc.append(testing_acc)
-      print("Testing acc on test: ", np.mean(total_testing_acc))
 
+      print("Testing acc on test: ", np.mean(total_testing_acc))
       elapsed_time = time.time() - start_time
       print("Iteration took: ", elapsed_time)
 
-    self.saver.save(self.sess, PROJ_ROOT+"models/tf_discrim")
