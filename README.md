@@ -39,6 +39,14 @@ To initialize training on ISOT and ISCX datasets (you will need to have download
 * Baseline featurization module to extract engineered features to compare against our feature-engineering-free network. 
 * Different recurrent neural network architectures implemented in Tensorflow
 
+### Code breakdown
+`botnet_attention` module:
+* This module is for downloading the default datasets and training our models on them
+
+`flow_featurization` module:
+* This module is for generating the default ISCX/ISOT datasets that can be downloaded as detailed in `Installation`
+* Unless you intend on adding a new dataset or modifying the preprocessing procedures for the default ISCX and ISOT datasets, you should not need to use this module.
+
 ### Contributions
 Feel free to make a pull request if you have any suggestions.
 Contributors are listed under `contributors.txt`.
