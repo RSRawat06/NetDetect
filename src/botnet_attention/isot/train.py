@@ -14,11 +14,9 @@ if __name__ == "__main__":
   data = load.fetch_data()
   with tf.Session() as sess:
     if config.MODEL == "vanilla":
-      model = models.vanilla_rnn(sess, config.MODEL_CONFIG)
-    elif config.MODEL == "attention":
-      model = models.attention_rnn(sess, config.MODEL_CONFIG)
-    elif config.MODEL == "double":
-      model = models.double_rnn(sess, config.MODEL_CONFIG)
+      model = models.vanilla_gru(sess, config.MODEL_CONFIG)
+    elif config.MODEL == "self":
+      model = models.self_attention(sess, config.MODEL_CONFIG)
     else:
       raise ValueError("Invalid choice of RNN model")
     model.build_model()
