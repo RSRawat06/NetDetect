@@ -17,21 +17,24 @@ We employ an end-to-end differentiable recurrent neural network with attention m
 To install, you will need the newest versions of Docker CE and Docker Compose.
 To initialize Docker, `cd` to the root of this project and:
 
-`docker-compose up --build`
-
-`bash access_cluster.sh`
+```
+docker-compose up --build
+bash access_cluster.sh
+```
 
 To download default datasets for ISOT and ISCX, run:
 
-`python3 -m botnet_attention.isot.download`
-
-`python3 -m botnet_attention.iscx.download`
+```
+python3 -m botnet_attention.isot.download
+python3 -m botnet_attention.iscx.download
+```
 
 To initialize training on ISOT and ISCX datasets (you will need to have downloaded them), run:
 
-`python3 -m botnet_attention.isot.train`
-
-`python3 -m botnet_attention.iscx.train`
+```
+python3 -m botnet_attention.isot.train
+python3 -m botnet_attention.iscx.train
+```
 
 ### What is included
 * Download scripts and source for ISOT and ISCX datasets
