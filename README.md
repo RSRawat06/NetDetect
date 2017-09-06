@@ -1,49 +1,52 @@
-# Botnet Attention
-Botnet detection in enterprise networks using recurrent neural networks with attention mechanisms (prototype: 9/1/2017)
+# Botnet Detection without Feature Engineering
+We apply recurrent neural networks with attention mechanisms to detect hosts infected by botnets in an enterprise network, without using any engineered features beyond basic packet properties.
 
 [![Maintenance Intended](http://maintained.tech/badge.svg)](http://maintained.tech/)
 
-### What's special
-* Applying recurrent networks to not only sequences of packets, but higher level sequences of flows
-* Using attention mechanisms to better identify patterns hiding in the relationships between packets and flows
-* Leverage end-to-end differentiability to learn minimally supervised packet-level encoding
+### Overview
+We capture network packets (.pcap) from enterpise networks (currently supported datasets: ISOT, ISCX). We sort the packets into network flows. We create data points for each host (which is either infected/benign), where each point is a 3-dimensional tensor: a sequence of network flows involving the IP, a sequence of packets composing each network flow, and a feature vector representing each packet. To attempt to learn encoding functions that generalize across botnet species, even previously unseen species, we limit ourselves to basic out-of-the-box packet features and avoid engineered features and heuristics.
+
+We employ an end-to-end differentiable recurrent neural network with attention mechanisms, to encode network flows and then predict based off of packet history whether a host has been infected. A simple RNN cell (LSTM/GRU) is used to encode sequences of packets, while sequences of flows are first encoded through RNN cells and then passed through a self-attention mechanism. The resulting vector is passed through a dense layer to obtain the prediction.
+
+# Goals
+* Achieve close to state-of-art scores without using a single engineered feature
+* Prove or invalidate my assumption that neural network architectures designed for natural language also carry over to network logs
+* Prove that our network can learn an encoding function that generalizes across botnets and potentially even across multiple network-related tasks
 
 ### Installation
-To get Docker started:
+To install, you will need the newest versions of Docker CE and Docker Compose.
+To initialize Docker, `cd` to the root of this project and:
 
 `docker-compose up --build`
 
 `bash access_cluster.sh`
 
-To download models:
+To download default datasets for ISOT and ISCX, run:
 
 `python3 -m botnet_attention.isot.download`
 
 `python3 -m botnet_attention.iscx.download`
 
-To run training:
+To initialize training on ISOT and ISCX datasets (you will need to have downloaded them), run:
 
 `python3 -m botnet_attention.isot.train`
 
 `python3 -m botnet_attention.iscx.train`
 
-### Overview
-This codebase offers:
-* Download and loading scripts for ISOT and ISCX datasets
-* Automated preprocessing, including pcap -> csv conversions
-* Feature extraction tools for packets
-* Network flow segmentation and feature extraction for flows
-* Three different recurrent neural network architectures implemented in Tensorflow
-* Vanilla RNN model to predict infection status given a sequence of packets in a flow
-* Deep RNN model to predict infection status given a sequence of network flows which each
-compose a sequence of packets
-* Self-attention RNN to predict infection status given a sequence of network flows which each
-compose a sequence of packets
-
+### What is included
+* Download scripts and source for ISOT and ISCX datasets
+* Network flow segmentation and basic packet feature preprocessing
+* Baseline featurization module to extract engineered features to compare against our feature-engineering-free network. 
+* Different recurrent neural network architectures implemented in Tensorflow
 
 ### Contributions
 Feel free to make a pull request if you have any suggestions.
 Contributors are listed under `contributors.txt`.
+
+### Special thanks
+* Dr. Bunn from Caltech's CACR for mentoring
+* Microsoft for the $5,000 Azure Research Award
+* hmishra2250 for his open source flow featurization module upon which our baseline featurization module is based.
 
 # License
 MIT License
