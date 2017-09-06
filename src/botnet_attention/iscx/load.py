@@ -28,7 +28,7 @@ def parse_feature(field, raw_value, records):
   is_flow_id, is_participant_ip, is_feature = False, False, False
   if field in ["ip.len", "frame.time_epoch", "tcp.len", "udp.len"]:
     if raw_value == "":
-      value = 0
+      value = [0]
     else:
       value = [int(raw_value)]
     is_feature = True
@@ -42,11 +42,11 @@ def parse_feature(field, raw_value, records):
   # Add participants
   elif field in ["ip.src", "ip.dst"]:
     is_participant_ip = True
-    value = str(raw_value)
+    value = [str(raw_value)]
   # Flow Numbers
   elif field == "FlowNo":
     is_flow_id = True
-    value = int(raw_value)
+    value = [int(raw_value)]
   else:
     raise ValueError
   return value, is_flow_id, is_participant_ip, is_feature
