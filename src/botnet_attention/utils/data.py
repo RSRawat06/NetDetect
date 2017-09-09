@@ -10,8 +10,8 @@ from .segmenter import segment_packets, segment_flows
 
 
 def load(config):
-  parse_feature = create_parse_feature(*config.PARSE_FEATURE)
-  store_categoricals = create_store_categoricals(*config.STORE_CATEGORICALS)
+  parse_feature = create_parse_feature(*config.COLUMNS)
+  store_categoricals = create_store_categoricals(*config.CATEGORICAL_COLUMNS)
 
   '''
   Load dataset fetching functions
@@ -70,8 +70,8 @@ def load(config):
             participants.append({"score": 0, "ip": ip})
         metadata.append({"participants": participants, "flow_id": flow_id})
 
-    X, flow_metadata = segment_packets(X, metadata, config.MAX_FLOW_LENGTH)
-    X, Y = segment_flows(X, flow_metadata, config.MAX_FLOW_SEQUENCE_LENGTH)
+    X, flow_metadata = segment_packets(X, metadata, config.N_PACKETS)
+    X, Y = segment_flows(X, flow_metadata, config.N_FLOWS)
     X, Y = shuffle_points(X, Y, config.SHUFFLE_PARTITION_LEN)
 
     # Calculate total true/false
