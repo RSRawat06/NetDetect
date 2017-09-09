@@ -19,7 +19,7 @@ class Self_Attention():
   def load(self, model_url):
     self.saver = tf.train.import_meta_graph(config.MODEL_DIR + config.SELF_META_NAME)
     self.saver.restore(self.sess, tf.train.latest_checkpoint(config.MODEL_DIR))
-    self.sess.run(tf.global_variables_initializer())
+    self.sess.run(tf.global_variables_initializer()) # may be an issue
 
   def build_model(self):
     # Set initial vars

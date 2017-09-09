@@ -31,14 +31,19 @@ def segment_packets(X, metadata, sequence_length):
   X = np.zeros((number_of_flows, sequence_length, len(X[0])), dtype=np.int32)
   flow_metadata = []
 
+  n_packets_sum = 0
+
   # Iterate through each flow
   for i in range(number_of_flows):
     # Pad + cut off X feature vector
+    n_packets_sum += len(flow_X[i][0])
     cutoff_x = flow_X[i][0][:sequence_length]
     right_padding_width = sequence_length - len(cutoff_x)
     X[i] = np.pad(cutoff_x, ((0, right_padding_width), (0, 0)), 'constant', constant_values=0)
     assert(X[i].shape[0] == sequence_length)
     flow_metadata.append(flow_X[i][1])
+
+  print("Average number of packets per flow:", n_packets_sum / number_of_flows)
 
   return X, flow_metadata
 
@@ -71,7 +76,9 @@ def segment_flows(flow_X, flow_metadata, sequence_length):
 
   X = []
   Y = []
+  average_flow_sum = 0
   for i in range(len(raw_X)):
+    average_flow_sum += len(raw_X[i])
     cutoff_x = raw_X[i][:sequence_length]
     right_padding_width = sequence_length - len(cutoff_x)
     point = np.pad(cutoff_x, ((0, right_padding_width), (0, 0), (0, 0)), 'constant', constant_values=0)
@@ -82,5 +89,6 @@ def segment_flows(flow_X, flow_metadata, sequence_length):
     score[int(raw_Y[i])] = 1
     Y.append(score)
 
+  print("Average number of flows in seq:", average_flow_sum / len(raw_X))
   return np.array(X), np.array(Y)
 
