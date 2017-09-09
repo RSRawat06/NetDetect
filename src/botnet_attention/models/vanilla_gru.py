@@ -4,9 +4,9 @@ import time
 from . import config
 
 tf.logging.set_verbosity(tf.logging.ERROR)
-ITERATIONS, RESULT_WEIGHTING, N_BATCHES, N_FLOWS, N_PACKETS, N_FEATURES = config['basic']
-N_HIDDEN_P, N_HIDDEN_M_P = config['packets']
-N_HIDDEN_F, N_HIDDEN_A_F, R_F = config['flows']
+ITERATIONS, RESULT_WEIGHTING, N_BATCHES, N_FLOWS, N_PACKETS, N_FEATURES = config.MODEL_CONFIG['basic']
+N_HIDDEN_P, N_HIDDEN_M_P, _ = config.MODEL_CONFIG['packets']
+N_HIDDEN_F, N_HIDDEN_A_F, R_F = config.MODEL_CONFIG['flows']
 
 
 class Self_Attention():

@@ -4,9 +4,9 @@ import time
 from . import config
 
 tf.logging.set_verbosity(tf.logging.ERROR)
-ITERATIONS, RESULT_WEIGHTING, N_BATCHES, N_FLOWS, N_PACKETS, N_FEATURES = config['basic']
-N_HIDDEN_P, N_HIDDEN_A_P, R_P = config['packets']
-N_HIDDEN_F, N_HIDDEN_A_F, R_F = config['flows']
+ITERATIONS, RESULT_WEIGHTING, N_BATCHES, N_FLOWS, N_PACKETS, N_FEATURES = config.MODEL_CONFIG['basic']
+N_HIDDEN_P, N_HIDDEN_A_P, R_P = config.MODEL_CONFIG['packets']
+N_HIDDEN_F, N_HIDDEN_A_F, R_F = config.MODEL_CONFIG['flows']
 
 
 class Self_Attention():
@@ -31,14 +31,16 @@ class Self_Attention():
     self.fwd_lstm_p = tf.nn.rnn_cell.BasicGRUCell(N_HIDDEN_P)
     self.bwd_lstm_p = tf.nn.rnn_cell.BasicGRUCell(N_HIDDEN_P)
 
-    self.H_p, _, _ = tf.nn.rnn.static_bidirectional_rnn(self.fwd_lstm_p, self.bwd_lstm_p, self.x)
-    # Shape: (n_batches, n_flows, n_packets, 2u)
+    self.H_p_flat, _, _ = tf.nn.rnn.static_bidirectional_rnn(self.fwd_lstm_p, self.bwd_lstm_p, tf.reshape(self.x, (N_BATCHES * N_FLOWS, N_PACKETS, N_FEATURES)))
+    # Shape: (n_batches * n_flows, n_packets, 2u)
+    self.H_p = tf.reshape(self.H_p_flat, (N_BATCHES, N_FLOWS, 2 * N_HIDDEN_P))
+    # Shape: (n_batches, n_flows, 2u)
 
-    self.W_s1_p = tf.get_variable("W_s1_p", shape=[N_HIDDEN_A_P, 2 * N_HIDDEN_P])
-    self.W_s2_p = tf.get_variable("W_s2_p", shape=[R_P, N_HIDDEN_A_P])
+    self.W_s1_p = tf.get_variable("W_s1_p", shape=[2 * N_HIDDEN_P, N_HIDDEN_A_P])
+    self.W_s2_p = tf.get_variable("W_s2_p", shape=[N_HIDDEN_A_P, R_P])
 
-    self.A_p = tf.softmax(tf.matmul(self.W_s2_p, tf.tanh(tf.matmul(self.W_s1_p, tf.transpose(self.H_p)))))
-    # Shape: (r, n_packets)
+    self.A_p = tf.nn.softmax(tf.matmul(tf.tanh(tf.matmul(self.H_p, self.W_s1_p)), self.W_s2_p))
+    # Shape: (n_batches, n_flows, r, n_packets) { sub: (n_h_a_p, 2 * n_h_p) ^ (batch_s, n_flows, 2 * n_h_p) = (N_BATCHES, N_FLOWS, N_HIDDEN_A_P)
 
     self.M_p = tf.matmul(self.A_p, self.H_p)
     # Shape: (n_batches, n_flows, r, 2u)
@@ -116,7 +118,7 @@ class Self_Attention():
             self.x: testing_data['X'][i:i + N_BATCHES],
             self.target: testing_data['Y'][i:i + N_BATCHES]
         }
-        __, testing_loss, testing_acc = self.sess.run([self.optim, self.loss, self.acc], feed_dict=feed_dict)
+        __, testing_acc = self.sess.run([self.optim, self.acc], feed_dict=feed_dict)
         total_testing_acc.append(testing_acc)
 
       print("Testing acc on test: ", np.mean(total_testing_acc))
