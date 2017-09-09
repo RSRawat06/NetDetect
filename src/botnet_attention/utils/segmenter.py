@@ -38,7 +38,7 @@ def segment_packets(X, metadata, sequence_length):
     right_padding_width = sequence_length - len(cutoff_x)
     X[i] = np.pad(cutoff_x, ((0, right_padding_width), (0, 0)), 'constant', constant_values=0)
     assert(X[i].shape[0] == sequence_length)
-    flow_metadata.append(X[i][1])
+    flow_metadata.append(flow_X[i][1])
 
   return X, flow_metadata
 

@@ -2,14 +2,17 @@
 Module to handle the import and preprocessing of datasets
 '''
 
-
 import csv
 import numpy as np
-from .preprocess import parse_row, shuffle_points
+from sklearn.utils import shuffle
+from .preprocess import parse_row, create_parse_feature, create_store_categoricals
 from .segmenter import segment_packets, segment_flows
 
 
-def load(config, parse_feature, store_categoricals):
+def load(config):
+  parse_feature = create_parse_feature(*config.PARSE_FEATURE)
+  store_categoricals = create_store_categoricals(*config.STORE_CATEGORICALS)
+
   '''
   Load dataset fetching functions
   '''
@@ -24,6 +27,7 @@ def load(config, parse_feature, store_categoricals):
     possible_categoricals = []
 
     with open(path, 'r') as f:
+      # First pass through data
       for i, row in enumerate(csv.reader(f)):
         # If first row, use it to generate header rows dict
         if i == 0:
@@ -32,16 +36,18 @@ def load(config, parse_feature, store_categoricals):
           i += 1
           continue
 
+        # Enumerate through possible categoricals
+        for j, value in enumerate(row):
+          field = fields_key[j]
+          possible_categoricals = store_categoricals(field, value, possible_categoricals)
+
         # If data cap is hit
         if config.N_CAP:
           if (config.N_CAP > i):
             print("Points cap reached. Data loading safely terminated early.")
             break
 
-        for j, value in enumerate(row):
-          field = fields_key[j]
-          possible_categoricals = store_categoricals(field, value, possible_categoricals)
-
+      # Second pass through data
       for i, row in enumerate(csv.reader(f)):
         if i == 0:
           continue
@@ -90,4 +96,30 @@ def load(config, parse_feature, store_categoricals):
     # Return end result
     return {"X": train_X, "Y": train_Y}, {"X": test_X, "Y": test_Y}
   return fetch
+
+
+def shuffle_points(X, Y, partition_len):
+  '''
+  Shuffle two large arrays in sync
+  '''
+  X_mid = []
+  Y_mid = []
+  # Break points into segments, and shuffle individual segments
+  for i in range(0, len(Y), partition_len):
+    sub_X, sub_Y = shuffle(X[i:i + partition_len], Y[i:i + partition_len], random_state=0)
+    X_mid.append(sub_X)
+    Y_mid.append(sub_Y)
+  del(X)
+  del(Y)
+  # Shuffle the high level segments
+  X_mid, Y_mid = shuffle(X_mid, Y_mid, random_state=0)
+  X_shuffled = []
+  Y_shuffled = []
+  # Flatten the segments back into an array
+  for i in range(len(Y_mid)):
+    X_shuffled += list(X_mid[i])
+    Y_shuffled += list(Y_mid[i])
+  del(X_mid)
+  del(Y_mid)
+  return np.array(X_shuffled), np.array(Y_shuffled)
 

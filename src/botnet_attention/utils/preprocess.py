@@ -5,10 +5,6 @@ Preprocesses datasets:
 '''
 
 
-from sklearn.utils import shuffle
-import numpy as np
-
-
 def parse_row(row, fields_key, parse_feature, records):
   '''
   Parse a data point (row) based off of provided
@@ -29,28 +25,49 @@ def parse_row(row, fields_key, parse_feature, records):
   return feature_vector, flow_id, participant_ips
 
 
-def shuffle_points(X, Y, partition_len):
-  '''
-  Shuffle two large arrays in sync
-  '''
-  X_mid = []
-  Y_mid = []
-  # Break points into segments, and shuffle individual segments
-  for i in range(0, len(Y), partition_len):
-    sub_X, sub_Y = shuffle(X[i:i + partition_len], Y[i:i + partition_len], random_state=0)
-    X_mid.append(sub_X)
-    Y_mid.append(sub_Y)
-  del(X)
-  del(Y)
-  # Shuffle the high level segments
-  X_mid, Y_mid = shuffle(X_mid, Y_mid, random_state=0)
-  X_shuffled = []
-  Y_shuffled = []
-  # Flatten the segments back into an array
-  for i in range(len(Y_mid)):
-    X_shuffled += list(X_mid[i])
-    Y_shuffled += list(Y_mid[i])
-  del(X_mid)
-  del(Y_mid)
-  return np.array(X_shuffled), np.array(Y_shuffled)
+def create_store_categoricals(categorical_fields, threshold=10):
+  def store_categoricals(field, value, records):
+    if field in categorical_fields:
+      if field not in records:
+        records[field] = []
+      if value not in records[field]:
+        records[field].append(value)
+      if len(records[field]) > threshold:
+        raise ValueError
+    return records
+  return store_categoricals
+
+
+def create_parse_feature(numerical_fields, categorical_fields, participant_fields, flow_field):
+  def parse_feature(field, raw_value, records):
+    '''
+    Parse feature based on field type.
+    Parsing mechanisms unique to ISCX.
+    '''
+    is_flow_id, is_participant_ip, is_feature = False, False, False
+    if field in numerical_fields:
+      if raw_value == "":
+        value = [0]
+      else:
+        value = [float(raw_value)]
+      is_feature = True
+    # Categorical data
+    elif field in categorical_fields:
+      is_feature = True
+      ind = records[field].index(raw_value)
+      assert(ind >= 0)
+      value = [0] * len(records[field])
+      value[ind] = 1
+    # Add participants
+    elif field in participant_fields:
+      is_participant_ip = True
+      value = str(raw_value)
+    # Flow Numbers
+    elif field == flow_field:
+      is_flow_id = True
+      value = int(raw_value)
+    else:
+      raise ValueError
+    return value, is_flow_id, is_participant_ip, is_feature
+  return parse_feature
 
