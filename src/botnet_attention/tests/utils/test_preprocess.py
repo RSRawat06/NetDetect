@@ -1,77 +1,57 @@
 from ...utils import preprocess
-import numpy as np
+
+
+def test_store_categorical():
+  store_categoricals = preprocess.create_store_categoricals(["type"])
+  headers_key = {0: "size", 1: "width", 2: "type", 3: "flow_id", 4: "ip", 5: "ip2"}
+  raw_first = [323, '23', 'apple', 5.0, 4]
+  raw_second = [22.5, '14', 'pear', 9.0, 4, 8]
+  records = {}
+  for row in [raw_first, raw_second]:
+    for i, value in enumerate(row):
+      field = headers_key[i]
+      records = store_categoricals(field, value, records)
+  assert(records == {"type": ["apple", "pear"]})
+
+
+def test_store_categorical_over():
+  store_categoricals = preprocess.create_store_categoricals(["type"], 2)
+  headers_key = {0: "size", 1: "width", 2: "type", 3: "flow_id", 4: "ip", 5: "ip2"}
+  raw_first = [323, '23', 'apple', 5.0, 4]
+  raw_second = [22.5, '14', 'pear', 9.0, 4, 8]
+  raw_third = [22.5, '14', 'chocolate', 9.0, 4, 8]
+  records = {}
+  for j, row in enumerate([raw_first, raw_second, raw_third]):
+    for i, value in enumerate(row):
+      field = headers_key[i]
+      if j == 2 and field == "type":
+        failed = False
+        try:
+          records = store_categoricals(field, value, records)
+        except ValueError:
+          failed = True
+        assert(failed)
+        continue
+      records = store_categoricals(field, value, records)
+  assert(records == {"type": ["apple", "pear", "chocolate"]})
 
 
 def test_parse_row():
-  def store_categoricals(field, value, records):
-    if field in ["type"]:
-      if field not in records:
-        records[field] = []
-      if value not in records[field]:
-        records[field].append(value)
-      if len(records[field]) > 10:
-        raise ValueError
-    return value
+  store_categoricals = preprocess.create_store_categoricals(["type"])
+  parse_feature = preprocess.create_parse_feature(["size", "width"], ["type"], ["ip", "ip2"], 'flow_id')
 
-
-  def parse_feature(field, raw_value):
-    is_flow_id, is_score, is_participant_ip, is_feature = False, False, False, False
-    if field in ["size", "width"]:
-      value = [int(raw_value)]
-      is_feature = True
-    elif field == "type":
-      is_feature = True
-      if raw_value.lower().strip() == "apple":
-        value = [0, 1]
-      elif raw_value.lower().strip() == "pear":
-        value = [1, 0]
-    elif field == "score":
-      is_score = True
-      value = int(raw_value / 3)
-    elif field == "ip":
-      is_participant_ip = True
-      value = int(raw_value)
-    elif field == "ip2":
-      is_participant_ip = True
-      value = int(raw_value)
-    elif field == "flow_id":
-      is_flow_id = True
-      value = int(raw_value)
-    else:
-      raise ValueError
-
-    return value, is_flow_id, is_score, is_participant_ip, is_feature
-
-  headers_key = {0: "size", 1: "width", 2: "type", 3: "flow_id", 4: "score", 5: "ip", 6: "ip2"}
-  raw_first = [323, '23', 'apple', 5.0, 3.0, 4]
-  raw_second = [22.5, '14', 'pear', 9.0, 0, 4, 8]
-  records = []
+  headers_key = {0: "size", 1: "width", 2: "type", 3: "flow_id", 4: "ip", 5: "ip2"}
+  raw_first = [323, '23', 'apple', 5.0, 4]
+  raw_second = [22.5, '14', 'pear', 9.0, 4, 8]
+  records = {}
   for row in [raw_first, raw_second]:
     for i, value in enumerate(row):
       field = headers_key[i]
       records = store_categoricals(field, value, records)
 
-  clean_first = ([323, 23, 0, 1], 1, 5, [4])
-  clean_second = ([22, 14, 1, 0], 0, 9, [4, 8])
+  clean_first = ([323.0, 23.0, 1, 0], 5, ['4'])
+  clean_second = ([22.5, 14.0, 0, 1], 9, ['4', '8'])
 
   assert(clean_first == preprocess.parse_row(raw_first, headers_key, parse_feature, records))
   assert(clean_second == preprocess.parse_row(raw_second, headers_key, parse_feature, records))
-
-
-def test_shuffle_points():
-  x, y = preprocess.shuffle_points(list(range(100)), list(range(100)), 10)
-  assert(len(x) == 100)
-  assert(np.all(list(range(100)) == np.sort(x)))
-  assert(len(y) == 100)
-  assert(np.all(list(range(100)) == np.sort(y)))
-  x, y = preprocess.shuffle_points(list(range(100)), list(range(100)), 3)
-  assert(len(x) == 100)
-  assert(np.all(list(range(100)) == np.sort(x)))
-  assert(len(y) == 100)
-  assert(np.all(list(range(100)) == np.sort(y)))
-  x, y = preprocess.shuffle_points(list(range(100)), list(range(100)), 120)
-  assert(len(x) == 100)
-  assert(np.all(list(range(100)) == np.sort(x)))
-  assert(len(y) == 100)
-  assert(np.all(list(range(100)) == np.sort(y)))
 

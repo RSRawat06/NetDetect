@@ -1,80 +1,46 @@
 from ...utils import segmenter
 import numpy as np
 
+# 100 IPs
+# 25 malignant
+# 396 flows
+# 396 * 3 packets
+# 4 features/packet
+all_ips = list(range(100))
+all_scores = [(x % 4 == 0) for x in range(100)]
+
+all_flow_participant_inds = [[{"ip": int(x / 4), "score": all_scores[int(x / 4)]}, {"ip": int(x / 4) + 1, "score": all_scores[int(x / 4) + 1]}] for x in range(99 * 4)]
+
+X_struct = [[[3 * x] * 4, [(3 * x) + 1] * 4, [(3 * x) + 2] * 4] for x in range(396)]
+
+X_flat = [[x] * 4 for x in range(0, 396 * 3)]
+
+assert(np.all(np.reshape(X_struct, (396 * 3, 4)) == X_flat))
+
+metadata = []
+for i in range(396 * 3):
+  metadata.append({"flow_id": int(i / 3), "participants": all_flow_participant_inds[int(i / 3)]})
+
 
 def test_segment_packets():
-  X = [list(range(x, x + 10)) for x in range(100)]
-  # X: [0, 1... 10], [1, 2... 11]... [99, 100... 109]
-  # X.shape: (100, 10)
-  Y = [[int(float(x) / 2), int(float(x) / 2) + 1] for x in range(100, 200)]
-  # Y: [50, 51], [50, 51], [51, 52], [51, 52]... [99, 100], [99, 100]
-  # Y.shape: (100, 2)
+  new_X, flow_metadata = segmenter.segment_packets(X_flat, metadata, 4)
+  assert(new_X.shape == (396, 4, 4))
+  assert(np.all(new_X == [x + [[0] * 4] for x in X_struct]))
 
-  metadata = [{"flow_id": int(float(x) / 2), "participant_ips": [int(float(x) / 4), int(float(x) / 4) + 1]} for x in range(100)]
-  # flow_id: 0, 0, 1, 1, ... 99, 99
-  # flow_id.shape: 100
-  # participant_ids: [0, 1], [0, 1], [0, 1], [0, 1], [1, 2], [1, 2]... [24, 25]
-  # participant_ids.shape: (100, 2)
+  new_X, flow_metadata = segmenter.segment_packets(X_flat, metadata, 3)
+  assert(new_X.shape == (396, 3, 4))
+  assert(np.all(new_X == X_struct))
 
-  new_X, new_Y = segmenter.segment_packets(X, Y, metadata, 3)
-  # new_X: [[0, 1... 10], [1, 2... 11], [0, 0... 0]], [[2, 3... 12], [3, 4... 13], [0, 0... 0]]...
-  # new_X.shape: (50, 3, 10)
-  # new_Y: [50, 51], [51, 52]...
-  # new_Y.shape: (50, 2)
-  assert(new_X.shape == (50, 3, 10))
-  assert(np.all(sequence == [list(range((2 * x), (2 * x) + 10)), list(range((2 * x) + 1, (2 * x) + 11)), np.zeros(10)] for x, sequence in enumerate(new_X)))
-  assert(new_Y.shape == (50, 2))
-  assert(np.all(new_Y == [[x, x + 1] for x in range(50, 100)]))
-
-  new_X, new_Y = segmenter.segment_packets(X, Y, metadata, 2)
-  # new_X: [[0, 1... 10], [1, 2... 11]], [[2, 3... 12], [3, 4... 13]]...
-  # new_X.shape: (50, 2, 10)
-  # new_Y: [50, 51], [51, 52]...
-  # new_Y.shape: (50, 2)
-  assert(new_X.shape == (50, 2, 10))
-  assert(np.all(sequence == [list(range((2 * x), (2 * x) + 10)), list(range((2 * x) + 1, (2 * x) + 11))] for x, sequence in enumerate(new_X)))
-  assert(new_Y.shape == (50, 2))
-  assert(np.all(new_Y == [[x, x + 1] for x in range(50, 100)]))
-
-  new_X, new_Y = segmenter.segment_packets(X, Y, metadata, 1)
-  # new_X: [[0, 1... 10]], [[2, 3... 12]]...
-  # new_X.shape: (50, 1, 10)
-  # new_Y: [50, 51], [51, 52]...
-  # new_Y.shape: (50, 2)
-  assert(new_X.shape == (50, 1, 10))
-  assert(np.all(sequence == [list(range((2 * x), (2 * x) + 10))] for x, sequence in enumerate(new_X)))
-  assert(new_Y.shape == (50, 2))
-  assert(np.all(new_Y == [[x, x + 1] for x in range(50, 100)]))
+  new_X, flow_metadata = segmenter.segment_packets(X_flat, metadata, 2)
+  assert(new_X.shape == (396, 2, 4))
+  assert(np.all(new_X == [x[:2] for x in X_struct]))
 
 
 def test_segment_flows():
-  X = [list(range(x, x + 10)) for x in range(100)]
-  # X: [0, 1... 10], [1, 2... 11]... [99, 100... 109]
-  # X.shape: (100, 10)
-  Y = [[int(float(x) / 8), int(float(x) / 8) + 1] for x in range(0, 100)]
-  # Y: [50, 51], [50, 51], [51, 52], [51, 52]... [99, 100], [99, 100]
-  # Y.shape: (100, 2)
+  new_X, flow_metadata = segmenter.segment_packets(X_flat, metadata, 4)
 
-  metadata = [{"flow_id": int(float(x) / 2), "participant_ips": [int(float(x) / 4), int(float(x) / 4) + 1]} for x in range(100)]
-  # flow_id: 0, 0, 1, 1, ... 99, 99
-  # flow_id.shape: 100
-  # participant_ids: [0, 1], [0, 1], [0, 1], [0, 1], [1, 2], [1, 2]... [24, 25]
-  # participant_ids.shape: (100, 2)
-
-  new_X, new_Y = segmenter.segment_packets(X, Y, metadata, 3)
-  # new_X: [[0, 1... 10], [1, 2... 11], [0, 0... 0]], [[2, 3... 12], [3, 4... 13], [0, 0... 0]]...
-  # new_X.shape: (50, 3, 10)
-  # new_Y: [50, 51], [51, 52]...
-  # new_Y.shape: (50, 2)
-
-  # first participant, last particiapnt = 2 flows, 4 packets
-  # others particiapnts = 4 flows, 8 packets
-  # users.shape = 25
-  # member_map.shape = (25, 2, 3, 10) or (25, 4, 3, 10)
-
-  X, Y = segmenter.segment_flows(new_X, new_Y, metadata, 2)
-  assert(X.shape == (24, 2, 3, 10))
-  assert(Y.shape == (24, 2))
-  # each data point has (flows, packets, features)
-  # each y has (2)
+  X, Y = segmenter.segment_flows(new_X, flow_metadata, 5)
+  assert(X.shape == (100, 5, 4, 4))
+  assert(Y.shape == (100, 2))
+  assert(np.all(np.argmax(Y, axis=1) == [(x % 4 == 0) for x in range(100)]))
 
