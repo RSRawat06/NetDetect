@@ -11,9 +11,9 @@ services:
       - 5000:5000
     build:
       context: .
-      dockerfile: ./src/botnet_attention/Dockerfile
+      dockerfile: ./botnet_attention/Dockerfile
     volumes:
-      - ./src:/service
+      - ./botnet_attention:/service
     networks:
       - default
     tty: true

@@ -8,7 +8,7 @@ RUN apt update \
 WORKDIR /service
 
 # Copying pip requirement files
-COPY ./src/botnet_attention/requirements.txt ./requirements.txt
+COPY ./botnet_attention/requirements.txt ./requirements.txt
 
 # Install python dependencies
 RUN export C_INCLUDE_PATH=/usr/include
