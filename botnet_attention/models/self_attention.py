@@ -1,7 +1,4 @@
 import tensorflow as tf
-import numpy as np
-import time
-from . import config as model_config
 from .base_model import Base_Model
 
 tf.logging.set_verbosity(tf.logging.ERROR)
