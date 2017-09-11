@@ -5,6 +5,10 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 
 
 class Vanilla_GRU(Base_Model):
+  def __init__(self, sess, config, model_name="vanilla_gru"):
+    Base_Model.__init__(self, sess, config)
+    self.model_name = model_name
+
   def build_model(self):
     # Set initial vars
     self.x = tf.placeholder(tf.float32, [self.config.BATCH_SIZE, self.config.N_FLOWS, self.config.N_PACKETS, self.config.N_FEATURES], name="x")
