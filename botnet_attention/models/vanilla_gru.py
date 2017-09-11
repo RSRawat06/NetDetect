@@ -17,8 +17,9 @@ class Vanilla_GRU(Base_Model):
 
     self.x_flatten = tf.reshape(self.x, (self.config.N_BATCHES * self.config.N_FLOWS, self.config.N_PACKETS, self.config.N_FEATURES))
     _, self.O_fwd_p_flat, self.O_bwd_p_flat = tf.nn.static_bidirectional_rnn(self.fwd_gru_p, self.bwd_gru_p, tf.unstack(self.x_flatten), dtype=tf.float32)
-    assert(self.O_fwd_p_flat.shape == (self.config.N_BATCHES * self.config.N_FLOWS, self.config.N_PACKETS, self.config.N_PACKET_GRU_HIDDEN))
-    assert(self.O_bwd_p_flat.shape == (self.config.N_BATCHES * self.config.N_FLOWS, self.config.N_PACKETS, self.config.N_PACKET_GRU_HIDDEN))
+    print(self.O_fwd_p_flat.shape)
+    assert(self.O_fwd_p_flat.shape == (self.config.N_BATCHES * self.config.N_FLOWS, self.config.N_PACKET_GRU_HIDDEN))
+    assert(self.O_bwd_p_flat.shape == (self.config.N_BATCHES * self.config.N_FLOWS, self.config.N_PACKET_GRU_HIDDEN))
     self.O_fwd_p = tf.reshape(self.O_fwd_p_flat, (self.config.N_BATCHES * self.config.N_FLOWS, self.config.N_PACKET_GRU_HIDDEN))
     self.O_bwd_p = tf.reshape(self.O_bwd_p_flat, (self.config.N_BATCHES * self.config.N_FLOWS, self.config.N_PACKET_GRU_HIDDEN))
     assert(self.O_fwd_p.shape == (self.config.N_BATCHES, self.config.N_FLOWS, self.config.N_PACKET_GRU_HIDDEN))
@@ -59,3 +60,6 @@ class Vanilla_GRU(Base_Model):
     # Setting optimizers
     self.optimizer = tf.train.AdamOptimizer()
     self.optim = self.optimizer.minimize(self.loss, var_list=tf.trainable_variables())
+
+    return self
+

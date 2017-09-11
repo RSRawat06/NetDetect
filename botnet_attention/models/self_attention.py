@@ -73,3 +73,6 @@ class Self_Attention(Base_Model):
     # Setting optimizers
     self.optimizer = tf.train.AdamOptimizer()
     self.optim = self.optimizer.minimize(self.loss, var_list=tf.trainable_variables())
+
+    return self
+
