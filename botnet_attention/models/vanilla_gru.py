@@ -5,7 +5,7 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 
 
 class Vanilla_GRU(Base_Model):
-  def __init__(self, sess, config, model_name="vanilla_gru"):
+  def __init__(self, sess, config, model_name="vanilla_gru.model"):
     Base_Model.__init__(self, sess, config)
     self.model_name = model_name
 

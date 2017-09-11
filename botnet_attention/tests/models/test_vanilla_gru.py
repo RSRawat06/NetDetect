@@ -5,6 +5,7 @@ import numpy as np
 
 
 def test_vanilla_gru():
+  tf.reset_default_graph()
   with tf.Session() as sess:
     model = models.vanilla_gru.Vanilla_GRU(sess, config)
     model.build_model()
@@ -13,7 +14,6 @@ def test_vanilla_gru():
     model.save()
 
   tf.reset_default_graph()
-
   with tf.Session() as sess:
     model2 = models.vanilla_gru.Vanilla_GRU(sess, config)
     model2.build_model()
