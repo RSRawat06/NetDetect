@@ -19,5 +19,6 @@ if __name__ == "__main__":
     else:
       raise ValueError("Invalid choice of model")
     model.build_model()
+    model.initialize()
     model.train(*data)
     model.save()

@@ -7,7 +7,6 @@ from . import config as model_config
 class Base_Model():
   def __init__(self, sess, config):
     self.sess = sess
-    self.var_init = tf.global_variables_initializer()
     self.config = config
     self.saver = None
     self.model_file = model_config.DEFAULT_MODEL_NAME
@@ -27,7 +26,6 @@ class Base_Model():
     self.var_init.run()
 
   def train(self, training_data, testing_data):
-    # self.var_init.run()
     for j in range(self.config.ITERATIONS):
       start_time = time.time()
 
@@ -53,7 +51,6 @@ class Base_Model():
       print("Iteration", j, "took: ", elapsed_time)
 
   def predict(self, input_data):
-    # self.var_init.run()
     all_predictions = []
     for i in range(0, input_data.shape[0], self.config.BATCH_SIZE):
       feed_dict = {

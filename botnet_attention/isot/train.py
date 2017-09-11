@@ -20,4 +20,6 @@ if __name__ == "__main__":
     else:
       raise ValueError("Invalid choice of RNN model")
     model.build_model()
-    model.train(*data, config.ITERATIONS)
+    model.initialize()
+    model.train(*data)
+    model.save()

@@ -11,19 +11,30 @@ DATA_NAME = "default_set.data"
 DATA_URL = "https://dropbox.com/dankmemes"
 
 # MODEL
-MODEL = "double"
-MODEL_CONFIG = {
-    "N_HIDDEN": 5,
-    "N_FEATURES": 13,
-    "MAX_FLOW_SEQUENCE_LENGTH": 5,
-    "MAX_FLOW_LENGTH": 5,
-    "ITERATIONS": 50,
-    "BATCH_S": 50,
-    "RESULT_WEIGHTING": [1, 5]
-}
+MODEL = "vanilla"
+BATCH_SIZE = 10
+ITERATIONS = 100
+
+N_PACKET_GRU_HIDDEN = 30
+N_PACKET_DENSE_HIDDEN = 30
+N_PACKET_ATTENTION_HIDDEN = 30
+N_FLOW_GRU_HIDDEN = 30
+N_FLOW_DENSE_HIDDEN = 30
+N_FLOW_ATTENTION_HIDDEN = 30
+
+RESULT_WEIGHTING = [1, 5]
+
 
 # DATASET
-N_CAP = 10000
-N_TEST = 1000
-SHUFFLE_PARTITION_LEN = 1000000
-USE_FLOW_SEQUENCES = False
+N_FLOWS = 20
+N_PACKETS = 40
+N_FEATURES = 10
+
+N_CAP = 100
+N_TEST = 10
+SHUFFLE_PARTITION_LEN = 1000
+MALICIOUS_IPS = ["192.168.2.112", "131.202.243.84", "192.168.5.122", "198.164.30.2", "192.168.2.110", "192.168.5.122", "192.168.4.118", "192.168.5.122", "192.168.2.113", "192.168.5.122", "192.168.1.103", "192.168.5.122", "192.168.4.120", "192.168.5.122", "192.168.2.112", "192.168.2.110", "192.168.2.112", "192.168.4.120", "192.168.2.112", "192.168.1.103", "192.168.2.112", "192.168.2.113", "192.168.2.112", "192.168.4.118", "192.168.2.112", "192.168.2.109", "192.168.2.112", "192.168.2.105", "192.168.1.105", "192.168.5.122", "147.32.84.180", "147.32.84.170", "147.32.84.150", "147.32.84.140", "147.32.84.130", "147.32.84.160", "10.0.2.15", "192.168.106.141", "192.168.106.131", "172.16.253.130", "172.16.253.131", "172.16.253.129", "172.16.253.240", "74.78.117.238", "158.65.110.24", "192.168.3.35", "192.168.3.25", "192.168.3.65", "172.29.0.116", "172.29.0.109", "172.16.253.132", "192.168.248.165", "10.37.130.4"]
+
+COLUMNS = [["ip.len", "frame.time_epoch", "tcp.len", "udp.len"], ["eth.dst", "tcp.dstport", "tcp.srcport", "udp.dstport", "udp.srcport", "ip.proto", "ip.flags", "frame.protocols", "tcp.flags"], ["ip.src", "ip.dst"], "FlowNo"]
+CATEGORICAL_COLUMNS = [["eth.dst", "tcp.dstport", "tcp.srcport", "udp.dstport", "udp.srcport", "ip.proto", "ip.flags", "frame.protocols", "tcp.flags"]]
+

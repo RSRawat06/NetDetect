@@ -12,7 +12,7 @@ class Self_Attention(Base_Model):
   def build_model(self):
     # Set initial vars
     self.x = tf.placeholder(tf.float32, [self.config.BATCH_SIZE, self.config.N_FLOWS, self.config.N_PACKETS, self.config.N_FEATURES])
-    self.target = tf.placeholder(tf.float32, [self.config.BATCH_SIZE, 1], name="target")
+    self.target = tf.placeholder(tf.float32, [self.config.BATCH_SIZE, 2], name="target")
 
     ##############################
 
@@ -21,7 +21,7 @@ class Self_Attention(Base_Model):
 
     self.x_unstacked = tf.unstack(tf.transpose(tf.reshape(self.x, (self.config.BATCH_SIZE * self.config.N_FLOWS, self.config.N_PACKETS, self.config.N_FEATURES)), (1, 0, 2)), name="x_unstacked")
     self.H_p, _, _ = tf.nn.static_bidirectional_rnn(self.fwd_gru_p, self.bwd_gru_p, self.x_unstacked, dtype=tf.float32, scope="packet_rnn")
-    assert(tf.stack(self.H_p).shape == (self.config.BATCH_SIZE * self.config.N_FLOWS, self.config.N_PACKETS, 1 * self.config.N_PACKET_GRU_HIDDEN))
+    assert(tf.stack(self.H_p).shape == (self.config.BATCH_SIZE * self.config.N_FLOWS, self.config.N_PACKETS, 2 * self.config.N_PACKET_GRU_HIDDEN))
 
     self.W_s_1_p = tf.get_variable("W_s_1_p", shape=[self.config.N_PACKET_ATTENTION_HIDDEN, 2 * self.config.N_PACKET_GRU_HIDDEN])
     self.W_s_2_p = tf.get_variable("W_s_2_p", shape=[self.config.N_PACKET_ATTENTION_HIDDEN])

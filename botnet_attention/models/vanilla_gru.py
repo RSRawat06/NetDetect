@@ -12,7 +12,7 @@ class Vanilla_GRU(Base_Model):
   def build_model(self):
     # Set initial vars
     self.x = tf.placeholder(tf.float32, [self.config.BATCH_SIZE, self.config.N_FLOWS, self.config.N_PACKETS, self.config.N_FEATURES], name="x")
-    self.target = tf.placeholder(tf.float32, [self.config.BATCH_SIZE, 1], name="target")
+    self.target = tf.placeholder(tf.float32, [self.config.BATCH_SIZE, 2], name="target")
 
     ##############################
 
@@ -34,6 +34,7 @@ class Vanilla_GRU(Base_Model):
 
     self.fwd_gru_f = tf.nn.rnn_cell.GRUCell(self.config.N_FLOW_GRU_HIDDEN)
     self.bwd_gru_f = tf.nn.rnn_cell.GRUCell(self.config.N_FLOW_GRU_HIDDEN)
+
     self.A_p_unstacked = tf.unstack(tf.transpose(self.A_p, (1, 0, 2)), name="A_p_unstacked")
     _, self.O_fwd_f, self.O_bwd_f = tf.nn.static_bidirectional_rnn(self.fwd_gru_f, self.bwd_gru_f, self.A_p_unstacked, dtype=tf.float32, scope="flow_rnn")
     assert(self.O_fwd_f.shape == (self.config.BATCH_SIZE, self.config.N_FLOW_GRU_HIDDEN))
@@ -49,6 +50,7 @@ class Vanilla_GRU(Base_Model):
     self.prediction = tf.nn.softmax(tf.matmul(self.A_f, self.W_final), name="prediction")
     assert(self.prediction.shape == (self.config.BATCH_SIZE, 2))
 
+    # Binary cross entropy. Yes binary, but loss is written as such to support multi-class.
     self.loss = -tf.reduce_sum(self.target * tf.log(self.prediction) * tf.constant(self.config.RESULT_WEIGHTING, dtype=tf.float32), name="loss")
 
     ##############################
