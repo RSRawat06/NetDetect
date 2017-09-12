@@ -20,6 +20,7 @@ def test_self_attention():
     model2.load()
     predictions = model2.predict(np.full((2 * config.BATCH_SIZE, config.N_FLOWS, config.N_PACKETS, config.N_FEATURES), 10))
 
+  tf.reset_default_graph()
 
 if __name__ == "__main__":
   test_self_attention()
