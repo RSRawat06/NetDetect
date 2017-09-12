@@ -30,7 +30,7 @@ class Self_Attention(Base_Model):
 
     self.r_p_mid = tf.tanh(tf.matmul(tf.reshape(self.H_p, (self.config.BATCH_SIZE * self.config.N_FLOWS * self.config.N_PACKETS, 2 * self.config.N_PACKET_GRU_HIDDEN)), self.W_s_1_p), name="r_p_mid")
     assert(self.r_p_mid.shape == (self.config.BATCH_SIZE * self.config.N_FLOWS * self.config.N_PACKETS, self.config.N_PACKET_ATTENTION_HIDDEN))
-    self.r_p = tf.reshape(tf.squeeze(tf.nn.softmax(tf.matmul(self.r_p_mid, self.W_s_2_p))), (self.config.BATCH_SIZE * self.config.N_FLOWS, self.config.N_PACKETS), name="r_p")
+    self.r_p = tf.nn.softmax(tf.reshape(tf.squeeze(tf.matmul(self.r_p_mid, self.W_s_2_p)), (self.config.BATCH_SIZE * self.config.N_FLOWS, self.config.N_PACKETS)), name="r_p")
     assert(self.r_p.shape == (self.config.BATCH_SIZE * self.config.N_FLOWS, self.config.N_PACKETS))
 
     self.M_p = tf.squeeze(tf.matmul(tf.transpose(self.H_p, (0, 2, 1)), tf.expand_dims(self.r_p, 2)), name="M_p")
@@ -58,7 +58,7 @@ class Self_Attention(Base_Model):
     
     self.r_f_mid = tf.tanh(tf.matmul(tf.reshape(self.H_f, (self.config.BATCH_SIZE * self.config.N_FLOWS, 2 * self.config.N_FLOW_GRU_HIDDEN)), self.W_s_1_f), name="r_f_mid")
     assert(self.r_f_mid.shape == (self.config.BATCH_SIZE * self.config.N_FLOWS, self.config.N_FLOW_ATTENTION_HIDDEN))
-    self.r_f = tf.reshape(tf.squeeze(tf.nn.softmax(tf.matmul(self.r_f_mid, self.W_s_2_f))), (self.config.BATCH_SIZE, self.config.N_FLOWS), name="r_f")
+    self.r_f = tf.nn.softmax(tf.reshape(tf.squeeze(tf.matmul(self.r_f_mid, self.W_s_2_f)), (self.config.BATCH_SIZE, self.config.N_FLOWS)), name="r_f")
     assert(self.r_f.shape == (self.config.BATCH_SIZE, self.config.N_FLOWS))
 
     self.M_f = tf.squeeze(tf.matmul(tf.transpose(self.H_f, (0, 2, 1)), tf.expand_dims(self.r_f, 2)), name="M_f")
