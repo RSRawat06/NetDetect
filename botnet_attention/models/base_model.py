@@ -9,17 +9,16 @@ class Base_Model():
     self.sess = sess
     self.config = config
     self.saver = None
-    self.model_file = model_config.DEFAULT_MODEL_NAME
 
   def save(self):
     if self.saver is None:
       self.saver = tf.train.Saver(tf.global_variables())
-    self.saver.save(self.sess, model_config.MODEL_DIR + self.model_file)
+    self.saver.save(self.sess, model_config.MODEL_DIR + self.model_name)
 
   def load(self):
     if self.saver is None:
       self.saver = tf.train.Saver(tf.global_variables())
-    self.saver.restore(self.sess, model_config.MODEL_DIR + self.model_file)
+    self.saver.restore(self.sess, model_config.MODEL_DIR + self.model_name)
 
   def initialize(self):
     self.var_init = tf.global_variables_initializer()
