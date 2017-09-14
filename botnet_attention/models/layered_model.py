@@ -73,7 +73,7 @@ class Layered_Model():
       W_s_1 = tf.get_variable("W_s_1", shape=(2 * config['n_gru_hidden'], config['n_attention_hidden']))
       W_s_2 = tf.get_variable("W_s_2", shape=(config['n_attention_hidden'], 1))
 
-      r_mid = tf.tanh(tf.matmul(tf.reshape(H, (config['n_seqs'] * config['seq_len'], 2 * config['n_gru_hidden'])), self.W_s_1), name="r_mid")
+      r_mid = tf.tanh(tf.matmul(tf.reshape(H, (config['n_seqs'] * config['seq_len'], 2 * config['n_gru_hidden'])), W_s_1), name="r_mid")
       assert(r_mid.shape == (config['n_seqs'] * config['seq_len'], config['n_attention_hidden']))
       r = tf.nn.softmax(tf.reshape(tf.squeeze(tf.matmul(r_mid, W_s_2)), (config['n_seqs'], config['seq_len'])), name="r")
       assert(r.shape == (config['n_seqs'], config['seq_len']))
@@ -89,7 +89,7 @@ class Layered_Model():
 
   def __prediction_layer(self, X, var_scope, config):
     '''
-    Predicts end result 
+    Predicts end result
     Args:
       X - input data of shape (batch, features)
       var_scope - string name of tf variable scope
@@ -101,10 +101,10 @@ class Layered_Model():
     '''
     assert(type(var_scope) == str)
     assert(type(config) == dict)
-    assert(X.shape == (config['n_batches'], config['n_input'])
+    assert(X.shape == (config['n_batches'], config['n_input']))
 
     with tf.variable_scope(var_scope):
-      W = tf.get_variable("W", shape=[config['n_input'], config['n_classes'])
+      W = tf.get_variable("W", shape=(config['n_input'], config['n_classes']))
       prediction = tf.nn.softmax(tf.matmul(X, W), name="prediction")
       assert(prediction.shape == (config['n_batches'], config['n_classes']))
 
