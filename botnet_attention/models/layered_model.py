@@ -119,12 +119,22 @@ class Layered_Model():
       result_weights - array indicating how much to weight loss for each class,
                        ex: [1, 5]
     '''
-    loss = -tf.reduce_sum(target * tf.log(prediction) * tf.constant(result_weights, dtype=tf.float32), name="loss")
-    optimizer = tf.train.AdamOptimizer()
-    optim = optimizer.minimize(loss, var_list=tf.trainable_variables())
+    with tf.variable_scope('optimization'):
+      loss = -tf.reduce_sum(target * tf.log(prediction) * tf.constant(result_weights, dtype=tf.float32), name="loss")
+      optimizer = tf.train.AdamOptimizer()
+      optim = optimizer.minimize(loss, var_list=tf.trainable_variables(), global_step=self.global_step)
 
-    correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(target, 1))
-    acc = tf.reduce_mean(tf.cast(correct, tf.float32), name="accuracy")
+      correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(target, 1))
+      acc = tf.reduce_mean(tf.cast(correct, tf.float32), name="accuracy")
 
-    return loss, optim, acc
+      return loss, optim, acc
+
+  def _summaries(self):
+    with tf.name_scope("summaries"):
+      tf.summary.scalar("loss", self.loss)
+      tf.summary.scalar("accuracy", self.acc)
+      tf.summary.histogram("histogram loss", self.loss)
+      summary_op = tf.summary.merge_all()
+
+      return summary_op
 

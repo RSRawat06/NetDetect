@@ -51,5 +51,7 @@ class Vanilla_GRU(Base_Model):
     # Get loss and optimizer
     self.loss, self.optim, self.acc = self._define_optimization_vars(self.target, self.prediction, config.LOSS_WEIGHTING)
 
+    self.summary_op = self._summaries()
+
     return self
 
