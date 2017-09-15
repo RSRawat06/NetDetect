@@ -14,13 +14,13 @@ class Self_Attention(Base_Model):
     Base_Model.__init__(self, sess, data_config)
     self.model_name = model_name
 
-  def build_model(self):
-    assert(self.x.shape == (config.BATCH_SIZE, config.NUMBERS['flows'], config.NUMBERS['packets'], config.NUMBERS['packet_features']))
-    assert(self.target.shape == (config.BATCH_SIZE, 2))
+  def build_model(self, local_batch_size=config.BATCH_SIZE):
+    assert(self.x.shape == (local_batch_size, config.NUMBERS['flows'], config.NUMBERS['packets'], config.NUMBERS['packet_features']))
+    assert(self.target.shape == (local_batch_size, 2))
 
     # Packets encoder
     packets_encoder_config = {
-        'n_seqs': config.BATCH_SIZE * config.NUMBERS['flows'],
+        'n_seqs': local_batch_size * config.NUMBERS['flows'],
         'seq_len': config.NUMBERS['packets'],
         'n_features': config.NUMBERS['packet_features'],
         'n_gru_hidden': config.HIDDEN['packets_gru'],
@@ -29,11 +29,11 @@ class Self_Attention(Base_Model):
     }
     packet_x = tf.reshape(self.x, (packets_encoder_config['n_seqs'], packets_encoder_config['seq_len'], packets_encoder_config['n_features']))
     encoded_flows_flat, att_matrix_p = self._attention_encoder_layer(packet_x, "packets_encoder", packets_encoder_config)
-    encoded_flows = tf.reshape(encoded_flows_flat, (config.BATCH_SIZE, config.NUMBERS['flows'], config.NUMBERS['flow_features']))
+    encoded_flows = tf.reshape(encoded_flows_flat, (local_batch_size, config.NUMBERS['flows'], config.NUMBERS['flow_features']))
 
     # Flow encoders
     flows_encoder_config = {
-        'n_seqs': config.BATCH_SIZE,
+        'n_seqs': local_batch_size,
         'seq_len': config.NUMBERS['flows'],
         'n_features': config.NUMBERS['flow_features'],
         'n_gru_hidden': config.HIDDEN['flows_gru'],
@@ -44,7 +44,7 @@ class Self_Attention(Base_Model):
 
     # Get predictions
     predictor_config = {
-        'n_batches': config.BATCH_SIZE,
+        'n_batches': local_batch_size,
         'n_input': config.NUMBERS['ip_features'],
         'n_classes': 2
     }

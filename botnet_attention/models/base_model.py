@@ -49,18 +49,18 @@ class Base_Model(Layered_Model):
     '''
     NUMBERS = config.NUMBERS
 
-    filename_queue = tf.train.string_input_producer([self.data_config.DATA_DIR + self.data_config.TF_SAVE], num_epochs=None)
+    filename_queue = tf.train.string_input_producer([self.data_config.DATA_DIR + self.data_config.TF_SAVE])
     reader = tf.TFRecordReader()
     _, serialized_example = reader.read(filename_queue)
     features = tf.parse_single_example(
         serialized_example,
         features={
+            'features': tf.FixedLenFeature((NUMBERS['flows'], NUMBERS['packets'], NUMBERS['packet_features']), tf.float32),
             'label': tf.FixedLenFeature((2), tf.float32),
-            'features': tf.FixedLenFeature((NUMBERS['flows'], NUMBERS['packets'], NUMBERS['packet_features']), tf.float32)
         }
     )
-    label = features['label']
     features = features['features']
+    label = features['label']
 
     self.x, self.target = tf.train.shuffle_batch([features, label], batch_size=config.BATCH_SIZE, capacity=500, min_after_dequeue=100)
     assert(self.x.shape == (config.BATCH_SIZE, NUMBERS['flows'], NUMBERS['packets'], NUMBERS['packet_features']))
@@ -80,8 +80,9 @@ class Base_Model(Layered_Model):
     '''
     Run model training. Model must have been initialized.
     '''
+
     coord = tf.train.Coordinator()
-    tf.train.start_queue_runners(sess=self.sess, coord=coord)
+    threads = tf.train.start_queue_runners(sess=self.sess, coord=coord)
     try:
       i = 0
       while not coord.should_stop():
@@ -91,6 +92,7 @@ class Base_Model(Layered_Model):
         self.writer.add_summary(summary, global_step=self.global_step)
     finally:
       coord.request_stop()
+      coord.join(threads)
 
   def pseudoload(self):
     '''
