@@ -25,44 +25,54 @@ def parse_row(row, fields_key, parse_feature, records):
   return feature_vector, flow_id, participant_ips
 
 
-def create_store_categoricals(categorical_fields, threshold=10):
+def create_store_categoricals(protocol_fields, categorical_fields, threshold=10):
   def store_categoricals(field, value, records):
-    if field in categorical_fields:
+    if field in protocol_fields:
       if field not in records:
-        records[field] = []
+        records['protocol'][field] = []
+      for cat in value.split(":"):
+        if cat not in records['protocol'][field]:
+          records['protocol'][field].append(cat)
+    elif field in categorical_fields:
+      if field not in records:
+        records['categorical'][field] = []
       if value not in records[field]:
-        records[field].append(value)
-      if len(records[field]) > threshold:
+        records['categorical'][field].append(value)
+      if len(records['categorical'][field]) > threshold:
+        print(records['categorical'][field])
         raise ValueError
     return records
   return store_categoricals
 
 
-def create_parse_feature(numerical_fields, categorical_fields, participant_fields, flow_field):
+def create_parse_feature(numerical, categorical, protocol, participant, flow_field):
   def parse_feature(field, raw_value, records):
     '''
     Parse feature based on field type.
     Parsing mechanisms unique to ISCX.
     '''
     is_flow_id, is_participant_ip, is_feature = False, False, False
-    if field in numerical_fields:
+
+    if field in numerical:
       if raw_value == "":
         value = [0]
       else:
         value = [float(raw_value)]
       is_feature = True
-    # Categorical data
-    elif field in categorical_fields:
+    elif field in categorical:
       is_feature = True
-      ind = records[field].index(raw_value)
+      ind = records['categorical'][field].index(raw_value)
       assert(ind >= 0)
-      value = [0] * len(records[field])
+      value = [0] * len(records['categorical'][field])
       value[ind] = 1
-    # Add participants
-    elif field in participant_fields:
+    elif field in protocol:
+      is_feature = True
+      value = [0] * len(records['categorical'][field])
+      for i, cat in enumerate(raw_value.split(":")):
+        value[i] = 1
+    elif field in participant:
       is_participant_ip = True
       value = str(raw_value)
-    # Flow Numbers
     elif field == flow_field:
       is_flow_id = True
       value = int(raw_value)
