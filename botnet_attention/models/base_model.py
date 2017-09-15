@@ -9,12 +9,37 @@ class Base_Model(Layered_Model):
   '''
 
   def __init__(self, sess, data_config):
+    assert(config.NUMBERS['packet_features'] == data_config.N_FEATURES)
+    assert(config.NUMBERS['flows'] == data_config.N_PACKETS)
+    assert(config.NUMBERS['packets'] == data_config.N_FLOWS)
+
     tf.set_random_seed(4)
     self.sess = sess
     self.data_config = data_config
     self.saver = None
     self.model_name = "default.model"
     self.global_step = tf.Variable(0, dtype=tf.int32, trainable=False, name='global_step')
+
+  def initialize(self):
+    '''
+    Initialize models: builds model, loads data, initializes variables
+    '''
+    self.load_pipeline()
+    self.build_model()
+    self.writer = tf.summary.FileWriter(self.data_config.DATA_DIR + 'graphs', sess.graph) 
+    self.var_init = tf.global_variables_initializer()
+    self.var_init.run()
+
+  def pseudoload(self):
+    '''
+    Pseudoload x as placeholders to support prediction
+    '''
+    self.x = tf.placeholder(tf.float32, shape=(config.BATCH_SIZE, config.NUMBERS['flows'], config.NUMBERS['packets'], config.NUMBERS['packet_features']))
+    self.target = tf.placeholder(tf.float32, shape=(config.BATCH_SIZE, 2))
+    self.build_model()
+    self.writer = tf.summary.FileWriter(self.data_config.DATA_DIR + 'graphs', sess.graph) 
+    self.var_init = tf.global_variables_initializer()
+    self.var_init.run()
 
   def save(self, global_step=None):
     '''
@@ -43,7 +68,7 @@ class Base_Model(Layered_Model):
 
     self.saver.restore(self.sess, self.data_config.DATA_DIR + 'checkpoints/' + self.model_name)
 
-  def load(self):
+  def load_pipeline(self):
     '''
     Load stream of data and batches input
     '''
@@ -66,16 +91,6 @@ class Base_Model(Layered_Model):
     assert(self.x.shape == (config.BATCH_SIZE, NUMBERS['flows'], NUMBERS['packets'], NUMBERS['packet_features']))
     assert(self.target.shape == (config.BATCH_SIZE, 2))
 
-  def initialize(self):
-    '''
-    Initialize models: builds model, loads data, initializes variables
-    '''
-    self.load()
-    self.build_model()
-    self.writer = tf.summary.FileWriter(self.data_config.DATA_DIR + 'graphs', sess.graph) 
-    self.var_init = tf.global_variables_initializer()
-    self.var_init.run()
-
   def train(self):
     '''
     Run model training. Model must have been initialized.
@@ -94,30 +109,16 @@ class Base_Model(Layered_Model):
       coord.request_stop()
       coord.join(threads)
 
-  def pseudoload(self):
-    '''
-    Pseudoload x as placeholders to support prediction
-    '''
-    self.raw_x = tf.placeholder(tf.int32)
-    queue1 = tf.FIFOQueue(capacity=10, dtypes=[tf.int32], shapes=[()])
-    self.enqueue_op = queue1.enqueue_many(self.raw_x)
-    self.dequeue_op = queue1.dequeue()
-
-    self.x = tf.train.shuffle_batch([self.dequeue_op], batch_size=config.BATCH_SIZE, capacity=50, min_after_dequeue=10)
-
   def predict(self, input_x):
     '''
     Predict classifications for new inputs
     '''
     predictions = []
-    coord = tf.train.Coordinator()
-    tf.train.start_queue_runners(sess=self.sess, coord=coord)
-    try:
-      while not coord.should_stop():
-        _, prediction = list(self.sess.run([self.enqueue_op, self.prediction], feed_dict={self.raw_x: input_x}))
-        predictions += prediction
-    finally:
-      coord.request_stop()
-
+    for i in range(0, len(input_x), config.BATCH_SIZE):
+      feed_dict = {
+          self.x: input_x[i:i + config.BATCH_SIZE]
+      }
+      prediction = list(self.sess.run([self.prediction], feed_dict={self.x: input_x}))
+      predictions += prediction
     return predictions
 

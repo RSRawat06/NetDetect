@@ -9,7 +9,7 @@ def test_self_attention():
   with tf.Session() as sess:
     model = models.self_attention.Self_Attention(sess, config)
     model.initialize()
-    model.predict(np.full((2 * models.config.BATCH_SIZE, models.config.NUMBERS['flows'], models.config.NUMBERS['packets'], models.config.NUMBERS['packet_features']), 10))
+    # model.predict(np.full((2 * models.config.BATCH_SIZE, models.config.NUMBERS['flows'], models.config.NUMBERS['packets'], models.config.NUMBERS['packet_features']), 10))
     model.save()
 
   tf.reset_default_graph()
@@ -17,7 +17,7 @@ def test_self_attention():
     model2 = models.self_attention.Self_Attention(sess, config)
     model2.pseudoload()
     model2.build_model()
-    model2.predict(np.full((2 * models.config.BATCH_SIZE, models.config.NUMBERS['flows'], models.config.NUMBERS['packets'], models.config.NUMBERS['packet_features']), 10))
+    # model2.predict(np.full((2 * models.config.BATCH_SIZE, models.config.NUMBERS['flows'], models.config.NUMBERS['packets'], models.config.NUMBERS['packet_features']), 10))
 
 
 if __name__ == "__main__":
