@@ -10,8 +10,8 @@ class Base_Model(Layered_Model):
 
   def __init__(self, sess, data_config):
     assert(config.NUMBERS['packet_features'] == data_config.N_FEATURES)
-    assert(config.NUMBERS['flows'] == data_config.N_PACKETS)
-    assert(config.NUMBERS['packets'] == data_config.N_FLOWS)
+    assert(config.NUMBERS['packets'] == data_config.N_PACKETS)
+    assert(config.NUMBERS['flows'] == data_config.N_FLOWS)
 
     tf.set_random_seed(4)
     self.sess = sess
