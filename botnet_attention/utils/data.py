@@ -12,13 +12,13 @@ def load(data_path, config):
   Fetch and preprocess dataset
   '''
 
-  parse_feature = create_parse_feature(*config.COLUMNS)
-  store_categoricals = create_store_categoricals(*config.CATEGORICAL_COLUMNS)
+  parse_feature = create_parse_feature(**config.COLUMNS, categorical=config.CATEGORICAL_COLUMNS, protocol=config.PROTOCOL_COLUMNS)
+  store_categoricals = create_store_categoricals(config.PROTOCOL_COLUMNS, config.CATEGORICAL_COLUMNS)
 
   X = []
-  fields_key = []
+  fields_key = {}
   metadata = []
-  possible_categoricals = []
+  possible_categoricals = {'categorical': {}, 'protocol': {}}
 
   with open(data_path, 'r') as f:
     for i, row in enumerate(csv.reader(f)):
