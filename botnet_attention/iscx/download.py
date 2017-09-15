@@ -11,8 +11,8 @@ import tensorflow as tf
 import numpy as np
 
 if __name__ == "__main__":
-  network.download_file(config.TRAIN_URL, config.DATA_DIR + config.TRAIN_DATA_NAME)
-  X, Y = data.load(config)
+  # network.download_file(config.TRAIN_URL, config.DATA_DIR + config.TRAIN_SAVE)
+  X, Y = data.load(config.DATA_DIR + config.TRAIN_SAVE, config)
   writer = tf.python_io.TFRecordWriter(config.DATA_DIR + config.TF_SAVE)
   for i in len(X):
     features = np.array(X[i], dtype=np.float32)
