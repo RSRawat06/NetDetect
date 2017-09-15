@@ -1,1 +1,1 @@
-from . import utils, models, iscx, isot
+from . import utils, models, iscx

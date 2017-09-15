@@ -27,8 +27,8 @@ class Vanilla_GRU(Base_Model):
         'n_dense_hidden': config.NUMBERS['flow_features']
     }
     packet_x = tf.reshape(self.x, (packets_encoder_config['n_seqs'], packets_encoder_config['seq_len'], packets_encoder_config['n_features']))
-    encoded_flows_flat = self.__encoder_layer(packet_x, "packets_encoder", packets_encoder_config)
-    encoded_flows = tf.reshape(encoded_flows_flat, (config.BATCH_SIZE, config.NUMBERS['flows'], config['flow_features']))
+    encoded_flows_flat = self._encoder_layer(packet_x, "packets_encoder", packets_encoder_config)
+    encoded_flows = tf.reshape(encoded_flows_flat, (config.BATCH_SIZE, config.NUMBERS['flows'], config.NUMBERS['flow_features']))
 
     # Flow encoders
     flows_encoder_config = {
@@ -38,7 +38,7 @@ class Vanilla_GRU(Base_Model):
         'n_gru_hidden': config.HIDDEN['flows_gru'],
         'n_dense_hidden': config.NUMBERS['ip_features']
     }
-    encoded_ips = self.__encoder_layer(encoded_flows, "flows_encoder", flows_encoder_config)
+    encoded_ips = self._encoder_layer(encoded_flows, "flows_encoder", flows_encoder_config)
 
     # Get predictions
     predictor_config = {
@@ -46,10 +46,10 @@ class Vanilla_GRU(Base_Model):
         'n_input': config.NUMBERS['ip_features'],
         'n_classes': 2
     }
-    self.prediction = self.__prediction_layer(encoded_ips, 'predictor', predictor_config)
+    self.prediction = self._prediction_layer(encoded_ips, 'predictor', predictor_config)
 
     # Get loss and optimizer
-    self.loss, self.optim, self.acc = self.__define_optimization_vars(self.target, self.prediction, config.LOSS_WEIGHTING)
+    self.loss, self.optim, self.acc = self._define_optimization_vars(self.target, self.prediction, config.LOSS_WEIGHTING)
 
     return self
 

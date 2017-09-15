@@ -42,14 +42,14 @@ class Base_Model(Layered_Model):
     features = tf.parse_single_example(
         serialized_example,
         features={
-            'label': tf.FixedLenFeature((2), tf.int64),
-            'features': tf.FixedLenFeature((NUMBERS['flows'], NUMBERS['packets'], NUMBERS['packet_features']), tf.int64)
+            'label': tf.FixedLenFeature((2), tf.float32),
+            'features': tf.FixedLenFeature((NUMBERS['flows'], NUMBERS['packets'], NUMBERS['packet_features']), tf.float32)
         }
     )
     label = features['label']
     features = features['features']
 
-    self.x, self.target = tf.train.shuffle_batch([features, label], batch_size=config.BATCH_SIZE)
+    self.x, self.target = tf.train.shuffle_batch([features, label], batch_size=config.BATCH_SIZE, capacity=500, min_after_dequeue=100)
     assert(self.x.shape == (config.BATCH_SIZE, NUMBERS['flows'], NUMBERS['packets'], NUMBERS['packet_features']))
     assert(self.target.shape == (config.BATCH_SIZE, 2))
 
@@ -57,8 +57,8 @@ class Base_Model(Layered_Model):
     '''
     Initialize models: builds model, loads data, initializes variables
     '''
-    self.build_model()
     self.load()
+    self.build_model()
     self.var_init = tf.global_variables_initializer()
     self.var_init.run()
 
@@ -79,11 +79,28 @@ class Base_Model(Layered_Model):
 
   def pseudoload(self):
     '''
-    Pseudoload x and target as placeholders to support prediction
+    Pseudoload x as placeholders to support prediction
     '''
-    self.x = tf.placeholder(tf.float32, (config.BATCH_SIZE, config.NUMBERS['flows'], config.NUMBERS['packets'], config.NUMBERS['packet_features']), name="x")
-    self.target = tf.placeholder(tf.float32, (config.BATCH_SIZE, 2), name="x")
+    self.raw_x = tf.placeholder(tf.int32)
+    queue1 = tf.FIFOQueue(capacity=10, dtypes=[tf.int32], shapes=[()])
+    self.enqueue_op = queue1.enqueue_many(self.raw_x)
+    self.dequeue_op = queue1.dequeue()
 
-  def predict(self):
-    pass
+    self.x = tf.train.shuffle_batch([self.dequeue_op], batch_size=config.BATCH_SIZE, capacity=50, min_after_dequeue=10)
+
+  def predict(self, input_x):
+    '''
+    Predict classifications for new inputs
+    '''
+    predictions = []
+    coord = tf.train.Coordinator()
+    tf.train.start_queue_runners(sess=self.sess, coord=coord)
+    try:
+      while not coord.should_stop():
+        _, prediction = list(self.sess.run([self.enqueue_op, self.prediction], feed_dict={self.raw_x: input_x}))
+        predictions += prediction
+    finally:
+      coord.request_stop()
+
+    return predictions
 

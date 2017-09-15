@@ -6,7 +6,7 @@ class Layered_Model():
   Base layer class that offers private methods for building TF layers
   '''
 
-  def __encoder_layer(self, X, var_scope, config):
+  def _encoder_layer(self, X, var_scope, config):
     '''
     Builds a layer for a simple GRU-encoding of a sequence.
     Args:
@@ -41,7 +41,7 @@ class Layered_Model():
 
       return A
 
-  def __attention_encoder_layer(self, X, var_scope, config):
+  def _attention_encoder_layer(self, X, var_scope, config):
     '''
     Builds a layer for a GRU-encoding of a sequence with self attention.
     Args:
@@ -87,7 +87,7 @@ class Layered_Model():
 
       return A, r
 
-  def __prediction_layer(self, X, var_scope, config):
+  def _prediction_layer(self, X, var_scope, config):
     '''
     Predicts end result
     Args:
@@ -110,7 +110,7 @@ class Layered_Model():
 
       return prediction
 
-  def __define_optimization_vars(self, target, prediction, result_weights):
+  def _define_optimization_vars(self, target, prediction, result_weights):
     '''
     Defines loss, optim, and various metrics to tarck training progress
     Args:
