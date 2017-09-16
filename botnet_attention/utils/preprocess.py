@@ -25,20 +25,21 @@ def parse_row(row, fields_key, parse_feature, records):
   return feature_vector, flow_id, participant_ips
 
 
-def create_store_categoricals(protocol_fields, categorical_fields, threshold=10):
+def create_store_categoricals(protocol_fields, categorical_fields, threshold=100):
   def store_categoricals(field, value, records):
     if field in protocol_fields:
-      if field not in records:
+      if field not in records['protocol']:
         records['protocol'][field] = []
       for cat in value.split(":"):
         if cat not in records['protocol'][field]:
           records['protocol'][field].append(cat)
     elif field in categorical_fields:
-      if field not in records:
+      if field not in records['categorical']:
         records['categorical'][field] = []
-      if value not in records[field]:
+      if value not in records['categorical'][field]:
         records['categorical'][field].append(value)
       if len(records['categorical'][field]) > threshold:
+        print(field)
         print(records['categorical'][field])
         raise ValueError
     return records
@@ -67,7 +68,7 @@ def create_parse_feature(numerical, categorical, protocol, participant, flow_fie
       value[ind] = 1
     elif field in protocol:
       is_feature = True
-      value = [0] * len(records['categorical'][field])
+      value = [0] * len(records['protocol'][field])
       for i, cat in enumerate(raw_value.split(":")):
         value[i] = 1
     elif field in participant:
