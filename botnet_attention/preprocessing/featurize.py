@@ -4,6 +4,15 @@ import csv
 
 def featurize_csv(data_path, numerical_fields, protocol_fields, categorical_fields, port_fields):
   '''
+  Load in a CSV and convert to ANN-friendly numpy vectors.
+  Args:
+    - data_path (str): path to data file
+    - numerical_fields (list of str): list of field names to be floated
+    - protocol_fields (list of str): list of field names with value of cls1:cls2:cls3
+    - categorical_fields (list of str): list of field names with categorical features
+    - port_fields (list of str): list of field names with categorical features to be capped at 2000
+  Returns:
+    - X: list([0, 1, 3.0, 4, 5...])
   '''
   all_records = {'protocol': {}, 'categorical': {}, 'port': {}}
   with open(data_path, 'r') as f:
@@ -26,8 +35,17 @@ def featurize_csv(data_path, numerical_fields, protocol_fields, categorical_fiel
 
 def featurize_row(row, headers_key, all_records, numerical_fields, protocol_fields, categorical_fields, port_fields):
   '''
-  Parse a data point (row) based off of provided
-  custom parse_feature function
+  Featurize a row into a real-valued vector
+  Args:
+    - row (list of str): row of a csv from csv.reader
+    - headers_key (dict): maps pos index in row to field name
+    - all_records (dict): holds information on which fields have which possible categorical values
+    - numerical_fields (list of str): list of field names to be floated
+    - protocol_fields (list of str): list of field names with value of cls1:cls2:cls3
+    - categorical_fields (list of str): list of field names with categorical features
+    - port_fields (list of str): list of field names with categorical features to be capped at 2000
+  Returns:
+    - feature_vector: list(0, 3, 4...)
   '''
   def __create_one_hot(record, values):
     onehot = [0] * len(record)
@@ -45,17 +63,28 @@ def featurize_row(row, headers_key, all_records, numerical_fields, protocol_fiel
     elif field in protocol_fields:
       feature_vector += __create_one_hot(all_records['protocol'][field], str(value).split(":"))
     elif field in categorical_fields:
-      feature_vector += __create_one_hot(all_records['categorical'][field], value)
+      feature_vector += __create_one_hot(all_records['categorical'][field], [value])
     elif field in port_fields:
       if value > 2000:
         value = 2000
-      feature_vector += __create_one_hot(all_records['port'][field], value)
+      feature_vector += __create_one_hot(all_records['port'][field], [value])
 
   return feature_vector
 
 
 def store_categoricals(row, headers_key, all_records, protocol_fields, categorical_fields, port_fields, threshold=30):
   '''
+  Store possible categorical values for each field in to a records dict
+  Args:
+    - row (list of str): row of a csv from csv.reader
+    - headers_key (dict): maps pos index in row to field name
+    - all_records (dict): holds information on which fields have which possible categorical values
+    - protocol_fields (list of str): list of field names with value of cls1:cls2:cls3
+    - categorical_fields (list of str): list of field names with categorical features
+    - port_fields (list of str): list of field names with categorical features to be capped at 2000
+    - threshold (int): limit on the length of a categorical one-hot vec
+  Returns:
+    - all_records (dict), similar to arg all_records but with new insights reflected
   '''
   def __append_to_records(records, field, value):
     if field not in records:
@@ -81,33 +110,4 @@ def store_categoricals(row, headers_key, all_records, protocol_fields, categoric
       __append_to_records(all_records['port'], field, int(value))
 
   return all_records
-
-
-def metadatize_csv(data_path, malicious_ips, flow_field, participant_fields):
-  '''
-  '''
-  metadata = []
-  with open(data_path, 'r') as f:
-    for i, row in enumerate(csv.reader(f)):
-      if i == 0:
-        headers_key = utils.build_headers(row)
-        continue
-      metadata.append(metadatize_row(row, headers_key, malicious_ips, flow_field, participant_fields))
-  return metadata
-
-
-def metadatize_row(row, headers_key, malicious_ips, flow_field, participant_fields):
-  '''
-  Parse a data point (row) based off of provided
-  custom parse_feature function
-  '''
-  participants = []
-  flow_id = None
-  for i, value in enumerate(row):
-    if headers_key[i] == flow_field:
-      flow_id = int(value)
-    elif headers_key[i] in participant_fields:
-      score = 1 if int(value) in malicious_ips else 0
-      participants.append({"score": score, "ip": int(value)})
-  return {'flow_id': flow_id, 'participants': participants}
 
