@@ -6,13 +6,14 @@ Run: `python3 -m botnet_attention.iscx.download`
 """
 
 from . import config
-from ..utils import network, data
+from ..utils import network
+from ..preprocessing import main
 import tensorflow as tf
 import numpy as np
 
 if __name__ == "__main__":
   # network.download_file(config.TRAIN_URL, config.DATA_DIR + config.TRAIN_SAVE)
-  X, Y = data.load(config.DATA_DIR + config.TRAIN_SAVE, config)
+  X, Y = main.preprocess(config.DATA_DIR + config.TRAIN_SAVE, config)
   writer = tf.python_io.TFRecordWriter(config.DATA_DIR + config.TF_SAVE)
   for i in len(X):
     features = np.array(X[i], dtype=np.float32)
