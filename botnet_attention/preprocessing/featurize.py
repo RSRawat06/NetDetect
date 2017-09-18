@@ -59,12 +59,16 @@ def featurize_row(row, headers_key, all_records, numerical_fields, protocol_fiel
   for i, value in enumerate(row):
     field = headers_key[i]
     if field in numerical_fields:
-      feature_vector.append(float(value))
+      value = float(value)
+      feature_vector.append(value)
     elif field in protocol_fields:
-      feature_vector += __create_one_hot(all_records['protocol'][field], str(value).split(":"))
+      value = str(value)
+      feature_vector += __create_one_hot(all_records['protocol'][field], value.split(":"))
     elif field in categorical_fields:
+      value = str(value)
       feature_vector += __create_one_hot(all_records['categorical'][field], [value])
     elif field in port_fields:
+      value = int(float(value))
       if value > 2000:
         value = 2000
       feature_vector += __create_one_hot(all_records['port'][field], [value])
@@ -105,9 +109,10 @@ def store_categoricals(row, headers_key, all_records, protocol_fields, categoric
       __append_to_records(all_records['categorical'], field, value)
 
     elif headers_key[i] in port_fields:
-      if int(value) > 2000:
+      value = int(float(value))
+      if value > 2000:
         value = 2000
-      __append_to_records(all_records['port'], field, int(value))
+      __append_to_records(all_records['port'], field, value)
 
   return all_records
 

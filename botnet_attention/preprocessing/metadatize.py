@@ -39,9 +39,9 @@ def metadatize_row(row, headers_key, malicious_ips, flow_field, participant_fiel
   flow_id = None
   for i, value in enumerate(row):
     if headers_key[i] == flow_field:
-      flow_id = int(value)
+      flow_id = int(float(value))
     elif headers_key[i] in participant_fields:
-      score = 1 if int(value) in malicious_ips else 0
-      participants.append({"score": score, "ip": int(value)})
+      score = 1 if str(value) in malicious_ips else 0
+      participants.append({"score": score, "ip": str(value)})
   return {'flow_id': flow_id, 'participants': participants}
 

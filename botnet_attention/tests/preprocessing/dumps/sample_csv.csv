@@ -1,0 +1,5 @@
+size,width,type,flow_id,ip,ip2,proto,port
+323,23,apple,5.0,4,6,chocolate:dank:shit,10
+22.5,14,pear,9.0,4,8,chocolate:weird:blah,2900
+12.5,14,chocolate,9.0,4,8,chocolate:weird:shit,1998
+22.5,14,pear,9.0,4,8,chocolate:weird,29000
