@@ -1,4 +1,5 @@
-from .featurize import featurize_csv, metadatize_csv
+from .featurize import featurize_csv
+from .metadatize import metadatize_csv
 from .segment import segment_by_ips, segment_by_flows
 
 
