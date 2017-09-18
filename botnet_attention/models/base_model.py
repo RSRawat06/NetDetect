@@ -2,6 +2,8 @@ import tensorflow as tf
 from .layered_model import Layered_Model
 from . import config
 
+tf.logging.set_verbosity(tf.logging.ERROR)
+
 
 class Base_Model(Layered_Model):
   '''
@@ -26,7 +28,7 @@ class Base_Model(Layered_Model):
     '''
     self.load_pipeline()
     self.build_model()
-    self.writer = tf.summary.FileWriter(self.data_config.DATA_DIR + 'graphs', sess.graph) 
+    self.writer = tf.summary.FileWriter(self.data_config.DATA_DIR + 'graphs', self.sess.graph)
     self.var_init = tf.global_variables_initializer()
     self.var_init.run()
 
@@ -37,7 +39,7 @@ class Base_Model(Layered_Model):
     self.x = tf.placeholder(tf.float32, shape=(config.BATCH_SIZE, config.NUMBERS['flows'], config.NUMBERS['packets'], config.NUMBERS['packet_features']))
     self.target = tf.placeholder(tf.float32, shape=(config.BATCH_SIZE, 2))
     self.build_model()
-    self.writer = tf.summary.FileWriter(self.data_config.DATA_DIR + 'graphs', sess.graph) 
+    self.writer = tf.summary.FileWriter(self.data_config.DATA_DIR + 'graphs', self.sess.graph)
     self.var_init = tf.global_variables_initializer()
     self.var_init.run()
 
@@ -64,7 +66,7 @@ class Base_Model(Layered_Model):
       ckpt = tf.train.get_checkpoint_state(self.data_config.DATA_DIR + 'checkpoints/checkpoint')
       if ckpt and ckpt.model_checkpoint_path:
         self.saver.restore(self.sess, ckpt.model_checkpoint_path)
-      return 
+      return
 
     self.saver.restore(self.sess, self.data_config.DATA_DIR + 'checkpoints/' + self.model_name)
 
@@ -118,7 +120,7 @@ class Base_Model(Layered_Model):
       feed_dict = {
           self.x: input_x[i:i + config.BATCH_SIZE]
       }
-      prediction = list(self.sess.run([self.prediction], feed_dict={self.x: input_x}))
+      prediction = list(self.sess.run([self.prediction], feed_dict=feed_dict))
       predictions += prediction
     return predictions
 

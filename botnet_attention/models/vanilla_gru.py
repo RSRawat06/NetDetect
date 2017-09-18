@@ -2,8 +2,6 @@ import tensorflow as tf
 from .base_model import Base_Model
 from . import config
 
-tf.logging.set_verbosity(tf.logging.ERROR)
-
 
 class Vanilla_GRU(Base_Model):
   '''
