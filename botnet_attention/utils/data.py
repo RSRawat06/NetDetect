@@ -13,7 +13,7 @@ def load(data_path, config):
   '''
 
   parse_feature = create_parse_feature(**config.COLUMNS, categorical=config.CATEGORICAL_COLUMNS, protocol=config.PROTOCOL_COLUMNS)
-  store_categoricals = create_store_categoricals(config.PROTOCOL_COLUMNS, config.CATEGORICAL_COLUMNS)
+  store_categoricals, store_protocols = create_store_categoricals(config.PROTOCOL_COLUMNS, config.CATEGORICAL_COLUMNS)
 
   X = []
   fields_key = {}
@@ -34,6 +34,7 @@ def load(data_path, config):
         field = fields_key[j]
         possible_categoricals = store_categoricals(field, value, possible_categoricals)
 
+  with open(data_path, 'r') as f:
     for i, row in enumerate(csv.reader(f)):
       if i == 0:
         continue

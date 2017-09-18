@@ -25,15 +25,26 @@ def parse_row(row, fields_key, parse_feature, records):
   return feature_vector, flow_id, participant_ips
 
 
-def create_store_categoricals(protocol_fields, categorical_fields, threshold=100):
-  def store_categoricals(field, value, records):
+def create_record_generators(protocol_fields, categorical_fields, threshold=10000):
+  def store_protocols(field, value, records):
     if field in protocol_fields:
       if field not in records['protocol']:
         records['protocol'][field] = []
       for cat in value.split(":"):
         if cat not in records['protocol'][field]:
           records['protocol'][field].append(cat)
-    elif field in categorical_fields:
+      if len(records['protocol'][field]) > threshold:
+        raise ValueError
+    return records
+
+  def store_categoricals(field, value, records):
+    try:
+      intified = int(value)
+      if intified >= 2000:
+        value = 2000
+    except ValueError:
+      value = value
+    if field in categorical_fields:
       if field not in records['categorical']:
         records['categorical'][field] = []
       if value not in records['categorical'][field]:
@@ -61,8 +72,16 @@ def create_parse_feature(numerical, categorical, protocol, participant, flow_fie
         value = [float(raw_value)]
       is_feature = True
     elif field in categorical:
+      try:
+        intified = int(value)
+        if intified >= 2000:
+          value = 2000
+        else:
+          value = raw_value
+      except ValueError:
+        value = raw_value
       is_feature = True
-      ind = records['categorical'][field].index(raw_value)
+      ind = records['categorical'][field].index(value)
       assert(ind >= 0)
       value = [0] * len(records['categorical'][field])
       value[ind] = 1

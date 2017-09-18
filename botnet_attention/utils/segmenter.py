@@ -16,6 +16,7 @@ def segment_packets(X, metadata, sequence_length):
   that flow.
   '''
 
+  print(metadata)
   number_of_flows = max([datum['flow_id'] for datum in metadata]) + 1
 
   flow_X = [[[], None] for _ in range(number_of_flows)]
