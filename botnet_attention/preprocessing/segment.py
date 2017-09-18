@@ -1,4 +1,7 @@
-def segment_by_flows(X, metadata):
+import numpy as np
+
+
+def segment_by_flows(X, metadata, sequence_length):
   '''
   Takes in packet features, packet metadata, and sequence
   length.
@@ -39,7 +42,7 @@ def segment_by_flows(X, metadata):
   return X, flow_metadata
 
 
-def segment_by_ips(X, metadata):
+def segment_by_ips(old_X, metadata, sequence_length):
   '''
   Segments flows into time-ordered sequences of flows.
   Flows are also scored.
@@ -50,20 +53,20 @@ def segment_by_ips(X, metadata):
   raw_Y = []
   member_ind_map = {}
 
-  for i in range(len(flow_X)):
-    source = flow_metadata[i]['participants'][0]
+  for i in range(len(old_X)):
+    source = metadata[i]['participants'][0]
     if source['ip'] not in member_ind_map:
       member_ind_map[source['ip']] = len(raw_X)
       raw_X.append([])
       raw_Y.append(source['score'])
-    raw_X[member_ind_map[source['ip']]].append(flow_X[i])
+    raw_X[member_ind_map[source['ip']]].append(old_X[i])
 
-    destination = flow_metadata[i]['participants'][1]
+    destination = metadata[i]['participants'][1]
     if destination['ip'] not in member_ind_map:
       member_ind_map[destination['ip']] = len(raw_X)
       raw_X.append([])
       raw_Y.append(destination['score'])
-    raw_X[member_ind_map[destination['ip']]].append(flow_X[i])
+    raw_X[member_ind_map[destination['ip']]].append(old_X[i])
 
   X = []
   Y = []

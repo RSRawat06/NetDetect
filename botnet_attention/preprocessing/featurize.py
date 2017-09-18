@@ -1,8 +1,8 @@
 from . import utils
-# Importing build_headers, 
+import csv
 
 
-def featurize_csv(csv, parse_feature, protocol_fields, categorical_fields, port_fields):
+def featurize_csv(data_path, numerical_fields, protocol_fields, categorical_fields, port_fields):
   '''
   '''
   all_records = {'protocol': {}, 'categorical': {}, 'port': {}}
@@ -11,34 +11,50 @@ def featurize_csv(csv, parse_feature, protocol_fields, categorical_fields, port_
       if i == 0:
         headers_key = utils.build_headers(row)
         continue
-      all_records = store_categoricals(row, all_records, protocol_fields, categorical_fields, port_fields)
- 
+      all_records = store_categoricals(row, headers_key, all_records, protocol_fields, categorical_fields, port_fields)
+
   X = []
   with open(data_path, 'r') as f:
     for i, row in enumerate(csv.reader(f)):
       if i == 0:
         headers_key = utils.build_headers(row)
         continue
-      X.append(featurize_row(row, headers_key, parse_feature, all_records))
-  return metadata
+      X.append(featurize_row(row, headers_key, all_records, numerical_fields, protocol_fields, categorical_fields, port_fields))
+
+  return X
 
 
-def featurize_row(row, headers_key, parse_feature, all_records):
+def featurize_row(row, headers_key, all_records, numerical_fields, protocol_fields, categorical_fields, port_fields):
   '''
   Parse a data point (row) based off of provided
   custom parse_feature function
   '''
+  def __create_one_hot(record, values):
+    onehot = [0] * len(record)
+    for value in values:
+      ind = record.index(value)
+      assert(ind >= 0)
+      onehot[ind] = 1
+    return onehot
+
   feature_vector = []
   for i, value in enumerate(row):
-    try:
-      value = parse_feature(headers_key[i], value, all_records)
-      feature_vector += value
-    except ValueError:
-      continue
+    field = headers_key[i]
+    if field in numerical_fields:
+      feature_vector.append(float(value))
+    elif field in protocol_fields:
+      feature_vector += __create_one_hot(all_records['protocol'][field], str(value).split(":"))
+    elif field in categorical_fields:
+      feature_vector += __create_one_hot(all_records['categorical'][field], value)
+    elif field in port_fields:
+      if value > 2000:
+        value = 2000
+      feature_vector += __create_one_hot(all_records['port'][field], value)
+
   return feature_vector
 
 
-def store_categoricals(row, headers_key, categorical_records, protocol_fields, categorical_fields, port_fields, threshold = 30):
+def store_categoricals(row, headers_key, all_records, protocol_fields, categorical_fields, port_fields, threshold=30):
   '''
   '''
   def __append_to_records(records, field, value):
@@ -67,7 +83,7 @@ def store_categoricals(row, headers_key, categorical_records, protocol_fields, c
   return all_records
 
 
-def metadatize_csv(data_path, is_flow_id, is_participant_ip):
+def metadatize_csv(data_path, malicious_ips, flow_field, participant_fields):
   '''
   '''
   metadata = []
@@ -76,22 +92,22 @@ def metadatize_csv(data_path, is_flow_id, is_participant_ip):
       if i == 0:
         headers_key = utils.build_headers(row)
         continue
-      metadata.append(metadatize_row(row, headers_key, malicious_ips, is_flow_id, is_participant_ip))
+      metadata.append(metadatize_row(row, headers_key, malicious_ips, flow_field, participant_fields))
   return metadata
 
 
-def metadatize_row(row, headers_key, malicious_ips, is_flow_id, is_participant_ip):
+def metadatize_row(row, headers_key, malicious_ips, flow_field, participant_fields):
   '''
   Parse a data point (row) based off of provided
   custom parse_feature function
   '''
-  participant = []
+  participants = []
   flow_id = None
   for i, value in enumerate(row):
-    if is_flow_id(headers_key[i]):
+    if headers_key[i] == flow_field:
       flow_id = int(value)
-    elif is_participant_ip(headers_key[i]):
+    elif headers_key[i] in participant_fields:
       score = 1 if int(value) in malicious_ips else 0
       participants.append({"score": score, "ip": int(value)})
-  return flow_id, participant
+  return flow_id, participants
 
