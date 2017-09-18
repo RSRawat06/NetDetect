@@ -57,16 +57,6 @@ def test_featurize_row():
     assert(clean == featurize.featurize_row(raw, headers_key, all_records, numerical_fields, protocol_fields, categorical_fields, port_fields))
 
 
-def test_metadatize_row():
-  for meta, raw in ((meta_first, raw_first), (meta_second, raw_second), (meta_third, raw_third), (meta_fourth, raw_fourth)):
-    assert(meta == featurize.metadatize_row(raw, headers_key, malicious_ips, flow_field, participant_fields))
-
-
-def test_metadatize_csv():
-  metadata = featurize.metadatize_csv(config.DATA_DIR + "sample_csv.csv", malicious_ips, flow_field, participant_fields)
-  assert(metadata == [meta_first, meta_second, meta_third, meta_fourth])
-
-
 def test_featurize_csv():
   X = featurize.featurize_csv(config.DATA_DIR + "sample_csv.csv", numerical_fields, protocol_fields, categorical_fields, port_fields)
   assert(np.all(X == np.array([clean_first, clean_second, clean_third, clean_fourth])))
