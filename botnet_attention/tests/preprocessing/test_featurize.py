@@ -31,11 +31,18 @@ malicious_ips = ['6', '8']
 def test_store_categoricals():
   all_records = {'categorical': {}, 'protocol': {}, 'port': {}}
   for row in [raw_first, raw_second]:
-    all_records = featurize.store_categoricals(row, headers_key, all_records, ['proto'], ['type'], ['port'])
+    all_records = featurize.store_categoricals(row, headers_key, all_records, ['proto'], ['type'], ['port'], port_cap=2000)
   assert(all_records == {'categorical': {'type': ['apple', 'pear']}, 'protocol': {'proto': ['chocolate', 'dank', 'shit', 'weird', 'blah']}, 'port': {'port': [10, 2000]}})
 
 
-def test_store_categorical_over():
+def test_store_categoricals_port_cap():
+  all_records = {'categorical': {}, 'protocol': {}, 'port': {}}
+  for row in [raw_first, raw_second]:
+    all_records = featurize.store_categoricals(row, headers_key, all_records, ['proto'], ['type'], ['port'], port_cap=3)
+  assert(all_records == {'categorical': {'type': ['apple', 'pear']}, 'protocol': {'proto': ['chocolate', 'dank', 'shit', 'weird', 'blah']}, 'port': {'port': [3]}})
+
+
+def test_store_categorical_threshold():
   all_records = {'categorical': {}, 'protocol': {}, 'port': {}}
   for i, row in enumerate([raw_first, raw_second]):
     if i == 1:
@@ -52,13 +59,13 @@ def test_store_categorical_over():
 def test_featurize_row():
   all_records = {'categorical': {}, 'protocol': {}, 'port': {}}
   for row in [raw_first, raw_second, raw_third, raw_fourth]:
-    all_records = featurize.store_categoricals(row, headers_key, all_records, ['proto'], ['type'], ['port'])
+    all_records = featurize.store_categoricals(row, headers_key, all_records, ['proto'], ['type'], ['port'], port_cap=2000)
   for clean, raw in ((clean_first, raw_first), (clean_second, raw_second), (clean_third, raw_third), (clean_fourth, raw_fourth)):
-    assert(clean == featurize.featurize_row(raw, headers_key, all_records, numerical_fields, protocol_fields, categorical_fields, port_fields))
+    assert(clean == featurize.featurize_row(raw, headers_key, all_records, numerical_fields, protocol_fields, categorical_fields, port_fields, port_cap=2000))
 
 
 def test_featurize_csv():
-  X = featurize.featurize_csv(config.DATA_DIR + "sample_csv.csv", numerical_fields, protocol_fields, categorical_fields, port_fields)
+  X = featurize.featurize_csv(config.DATA_DIR + "sample_csv.csv", numerical_fields, protocol_fields, categorical_fields, port_fields, port_cap=2000)
   assert(np.all(X == np.array([clean_first, clean_second, clean_third, clean_fourth])))
 
 test_featurize_csv()
