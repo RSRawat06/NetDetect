@@ -78,16 +78,17 @@ class Base_Model(Layered_Model):
 
     filename_queue = tf.train.string_input_producer([self.data_config.DATA_DIR + self.data_config.TF_SAVE])
     reader = tf.TFRecordReader()
-    _, serialized_example = reader.read(filename_queue)
+    _, serialized = reader.read(filename_queue)
     features = tf.parse_single_example(
-        serialized_example,
+        serialized,
         features={
-            'features': tf.FixedLenFeature((NUMBERS['flows'], NUMBERS['packets'], NUMBERS['packet_features']), tf.float32),
-            'label': tf.FixedLenFeature((2), tf.float32),
+            'features': tf.FixedLenFeature([], tf.string),
+            'label': tf.FixedLenFeature([], tf.string),
         }
     )
-    features = features['features']
-    label = features['label']
+    flat_features = tf.decode_raw(features['features'], tf.float32)
+    features = tf.reshape(flat_features, (NUMBERS['flows'], NUMBERS['packets'], NUMBERS['packet_features']))
+    label = tf.reshape(tf.decode_raw(features['label'], tf.float32), 2)
 
     self.x, self.target = tf.train.shuffle_batch([features, label], batch_size=config.BATCH_SIZE, capacity=500, min_after_dequeue=100)
     assert(self.x.shape == (config.BATCH_SIZE, NUMBERS['flows'], NUMBERS['packets'], NUMBERS['packet_features']))
