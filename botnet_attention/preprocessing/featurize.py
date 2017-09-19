@@ -2,7 +2,7 @@ from . import utils
 import csv
 
 
-def featurize_csv(data_path, numerical_fields, protocol_fields, categorical_fields, port_fields):
+def featurize_csv(data_path, numerical_fields, protocol_fields, categorical_fields, port_fields, port_cap=1000):
   '''
   Load in a CSV and convert to ANN-friendly numpy vectors.
   Args:
@@ -10,7 +10,7 @@ def featurize_csv(data_path, numerical_fields, protocol_fields, categorical_fiel
     - numerical_fields (list of str): list of field names to be floated
     - protocol_fields (list of str): list of field names with value of cls1:cls2:cls3
     - categorical_fields (list of str): list of field names with categorical features
-    - port_fields (list of str): list of field names with categorical features to be capped at 2000
+    - port_fields (list of str): list of field names with categorical features to be capped 
   Returns:
     - X: list([0, 1, 3.0, 4, 5...])
   '''
@@ -20,7 +20,7 @@ def featurize_csv(data_path, numerical_fields, protocol_fields, categorical_fiel
       if i == 0:
         headers_key = utils.build_headers(row)
         continue
-      all_records = store_categoricals(row, headers_key, all_records, protocol_fields, categorical_fields, port_fields)
+      all_records = store_categoricals(row, headers_key, all_records, protocol_fields, categorical_fields, port_fields, port_cap=port_cap)
 
   X = []
   with open(data_path, 'r') as f:
@@ -28,12 +28,12 @@ def featurize_csv(data_path, numerical_fields, protocol_fields, categorical_fiel
       if i == 0:
         headers_key = utils.build_headers(row)
         continue
-      X.append(featurize_row(row, headers_key, all_records, numerical_fields, protocol_fields, categorical_fields, port_fields))
+      X.append(featurize_row(row, headers_key, all_records, numerical_fields, protocol_fields, categorical_fields, port_fields, port_cap=port_cap))
 
   return X
 
 
-def featurize_row(row, headers_key, all_records, numerical_fields, protocol_fields, categorical_fields, port_fields):
+def featurize_row(row, headers_key, all_records, numerical_fields, protocol_fields, categorical_fields, port_fields, port_cap=1000):
   '''
   Featurize a row into a real-valued vector
   Args:
@@ -43,7 +43,7 @@ def featurize_row(row, headers_key, all_records, numerical_fields, protocol_fiel
     - numerical_fields (list of str): list of field names to be floated
     - protocol_fields (list of str): list of field names with value of cls1:cls2:cls3
     - categorical_fields (list of str): list of field names with categorical features
-    - port_fields (list of str): list of field names with categorical features to be capped at 2000
+    - port_fields (list of str): list of field names with categorical features to be capped 
   Returns:
     - feature_vector: list(0, 3, 4...)
   '''
@@ -69,14 +69,14 @@ def featurize_row(row, headers_key, all_records, numerical_fields, protocol_fiel
       feature_vector += __create_one_hot(all_records['categorical'][field], [value])
     elif field in port_fields:
       value = int(float(value))
-      if value > 2000:
-        value = 2000
+      if value > port_cap:
+        value = port_cap
       feature_vector += __create_one_hot(all_records['port'][field], [value])
 
   return feature_vector
 
 
-def store_categoricals(row, headers_key, all_records, protocol_fields, categorical_fields, port_fields, threshold=30):
+def store_categoricals(row, headers_key, all_records, protocol_fields, categorical_fields, port_fields, threshold=30, port_cap=1000):
   '''
   Store possible categorical values for each field in to a records dict
   Args:
@@ -85,7 +85,7 @@ def store_categoricals(row, headers_key, all_records, protocol_fields, categoric
     - all_records (dict): holds information on which fields have which possible categorical values
     - protocol_fields (list of str): list of field names with value of cls1:cls2:cls3
     - categorical_fields (list of str): list of field names with categorical features
-    - port_fields (list of str): list of field names with categorical features to be capped at 2000
+    - port_fields (list of str): list of field names with categorical features to be capped 
     - threshold (int): limit on the length of a categorical one-hot vec
   Returns:
     - all_records (dict), similar to arg all_records but with new insights reflected
@@ -100,6 +100,8 @@ def store_categoricals(row, headers_key, all_records, protocol_fields, categoric
     return records
 
   for i, value in enumerate(row):
+    if value == "":
+      continue
     field = headers_key[i]
     if field in protocol_fields:
       for protocol in str(value).split(":"):
@@ -110,8 +112,8 @@ def store_categoricals(row, headers_key, all_records, protocol_fields, categoric
 
     elif headers_key[i] in port_fields:
       value = int(float(value))
-      if value > 2000:
-        value = 2000
+      if value > port_cap:
+        value = port_cap
       __append_to_records(all_records['port'], field, value)
 
   return all_records
