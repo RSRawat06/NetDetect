@@ -30,7 +30,8 @@ def featurize_csv(data_path, numerical_fields, protocol_fields, categorical_fiel
         headers_key = utils.build_headers(row)
         continue
       X.append(featurize_row(row, headers_key, all_records, numerical_fields, protocol_fields, categorical_fields, port_fields, port_cap=port_cap))
-
+ 
+  del(all_records)
   return np.array(X)
 
 

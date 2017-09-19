@@ -13,10 +13,13 @@ import numpy as np
 import pickle
 
 if __name__ == "__main__":
-  # network.download_file(config.TRAIN_URL, config.DATA_DIR + config.TRAIN_SAVE)
+  network.download_file(config.TRAIN_URL, config.DATA_DIR + config.TRAIN_SAVE)
+  print("File downloaded")
   X, Y = main.preprocess(config.DATA_DIR + config.TRAIN_SAVE, config)
+  print("File preprocessed")
   with open('chocolate.p', 'wb') as f:
     pickle.dump((X, Y), f)
+  print("File dumped")
 
   writer = tf.python_io.TFRecordWriter(config.DATA_DIR + config.TF_SAVE)
   for i in len(X):

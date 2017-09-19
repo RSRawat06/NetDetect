@@ -20,6 +20,7 @@ def metadatize_csv(data_path, malicious_ips, flow_field, participant_fields):
         headers_key = utils.build_headers(row)
         continue
       metadata.append(metadatize_row(row, headers_key, malicious_ips, flow_field, participant_fields))
+
   return metadata
 
 
