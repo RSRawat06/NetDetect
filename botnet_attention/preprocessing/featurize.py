@@ -101,8 +101,6 @@ def store_categoricals(row, headers_key, all_records, protocol_fields, categoric
     if value not in records[field]:
       records[field].append(value)
     if len(records[field]) > threshold:
-      print(records[field])
-      print(field)
       raise ValueError
     return records
 
