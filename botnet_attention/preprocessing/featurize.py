@@ -1,4 +1,5 @@
 from . import utils
+import numpy as np
 import csv
 
 
@@ -30,7 +31,7 @@ def featurize_csv(data_path, numerical_fields, protocol_fields, categorical_fiel
         continue
       X.append(featurize_row(row, headers_key, all_records, numerical_fields, protocol_fields, categorical_fields, port_fields, port_cap=port_cap))
 
-  return X
+  return np.array(X)
 
 
 def featurize_row(row, headers_key, all_records, numerical_fields, protocol_fields, categorical_fields, port_fields, port_cap=1000):
