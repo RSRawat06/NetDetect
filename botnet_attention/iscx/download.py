@@ -10,13 +10,17 @@ from ..utils import network
 from ..preprocessing import main
 import tensorflow as tf
 import numpy as np
+import pickle
 
 if __name__ == "__main__":
   # network.download_file(config.TRAIN_URL, config.DATA_DIR + config.TRAIN_SAVE)
   X, Y = main.preprocess(config.DATA_DIR + config.TRAIN_SAVE, config)
+  with open('chocolate.p', 'wb') as f:
+    pickle.dump((X, Y), f)
+
   writer = tf.python_io.TFRecordWriter(config.DATA_DIR + config.TF_SAVE)
   for i in len(X):
-    features = np.array(X[i], dtype=np.float32)
+    features = np.reshape(np.array(X[i], dtype=np.float32), (-1))
     label = np.array(Y[i], dtype=np.float32)
     example = tf.train.Example(
         features=tf.train.Features(
