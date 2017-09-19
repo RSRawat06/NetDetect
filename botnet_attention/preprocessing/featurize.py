@@ -59,6 +59,8 @@ def featurize_row(row, headers_key, all_records, numerical_fields, protocol_fiel
   for i, value in enumerate(row):
     field = headers_key[i]
     if field in numerical_fields:
+      if value == "":
+        value = 0
       value = float(value)
       feature_vector.append(value)
     elif field in protocol_fields:
@@ -68,15 +70,18 @@ def featurize_row(row, headers_key, all_records, numerical_fields, protocol_fiel
       value = str(value)
       feature_vector += __create_one_hot(all_records['categorical'][field], [value])
     elif field in port_fields:
-      value = int(float(value))
-      if value > port_cap:
-        value = port_cap
+      if value == "":
+        value = -1
+      else:
+        value = int(float(value))
+        if value > port_cap:
+          value = port_cap
       feature_vector += __create_one_hot(all_records['port'][field], [value])
 
   return feature_vector
 
 
-def store_categoricals(row, headers_key, all_records, protocol_fields, categorical_fields, port_fields, threshold=30, port_cap=1000):
+def store_categoricals(row, headers_key, all_records, protocol_fields, categorical_fields, port_fields, threshold=300, port_cap=1000):
   '''
   Store possible categorical values for each field in to a records dict
   Args:
@@ -96,12 +101,12 @@ def store_categoricals(row, headers_key, all_records, protocol_fields, categoric
     if value not in records[field]:
       records[field].append(value)
     if len(records[field]) > threshold:
+      print(records[field])
+      print(field)
       raise ValueError
     return records
 
   for i, value in enumerate(row):
-    if value == "":
-      continue
     field = headers_key[i]
     if field in protocol_fields:
       for protocol in str(value).split(":"):
@@ -111,9 +116,12 @@ def store_categoricals(row, headers_key, all_records, protocol_fields, categoric
       __append_to_records(all_records['categorical'], field, value)
 
     elif headers_key[i] in port_fields:
-      value = int(float(value))
-      if value > port_cap:
-        value = port_cap
+      if value == "":
+        value = -1
+      else:
+        value = int(float(value))
+        if value > port_cap:
+          value = port_cap
       __append_to_records(all_records['port'], field, value)
 
   return all_records
