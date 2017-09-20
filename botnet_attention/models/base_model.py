@@ -11,8 +11,7 @@ class Base_Model(Layered_Model):
   '''
 
   def __init__(self, sess, data_config):
-    assert(config.NUMBERS['packet_features'] == data_config.N_FEATURES)
-    assert(config.NUMBERS['packets'] == data_config.N_PACKETS)
+    assert(config.NUMBERS['flow_features'] == data_config.N_FEATURES)
     assert(config.NUMBERS['flows'] == data_config.N_FLOWS)
 
     tf.set_random_seed(4)
@@ -36,7 +35,7 @@ class Base_Model(Layered_Model):
     '''
     Pseudoload x as placeholders to support prediction
     '''
-    self.x = tf.placeholder(tf.float32, shape=(config.BATCH_SIZE, config.NUMBERS['flows'], config.NUMBERS['packets'], config.NUMBERS['packet_features']))
+    self.x = tf.placeholder(tf.float32, shape=(config.BATCH_SIZE, config.NUMBERS['flows'], config.NUMBERS['flow_features']))
     self.target = tf.placeholder(tf.float32, shape=(config.BATCH_SIZE, 2))
     self.build_model()
     self.writer = tf.summary.FileWriter(self.data_config.DATA_DIR + 'graphs', self.sess.graph)
@@ -86,12 +85,11 @@ class Base_Model(Layered_Model):
             'label': tf.FixedLenFeature([], tf.string),
         }
     )
-    flat_features = tf.decode_raw(features['features'], tf.float32)
-    features = tf.reshape(flat_features, (NUMBERS['flows'], NUMBERS['packets'], NUMBERS['packet_features']))
+    features = tf.reshape(tf.decode_raw(features['features'], tf.float31), (NUMBERS['flows'], NUMBERS['flow_features']))
     label = tf.reshape(tf.decode_raw(features['label'], tf.float32), 2)
 
     self.x, self.target = tf.train.shuffle_batch([features, label], batch_size=config.BATCH_SIZE, capacity=500, min_after_dequeue=100)
-    assert(self.x.shape == (config.BATCH_SIZE, NUMBERS['flows'], NUMBERS['packets'], NUMBERS['packet_features']))
+    assert(self.x.shape == (config.BATCH_SIZE, NUMBERS['flows'], NUMBERS['flow_features']))
     assert(self.target.shape == (config.BATCH_SIZE, 2))
 
   def train(self):
