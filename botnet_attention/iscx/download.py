@@ -13,8 +13,6 @@ import numpy as np
 import pickle
 
 if __name__ == "__main__":
-  network.download_file(config.TRAIN_URL, config.DATA_DIR + config.TRAIN_SAVE)
-  print("File downloaded")
   X, Y = main.preprocess(config.DATA_DIR + config.TRAIN_SAVE, config)
   print("File preprocessed")
   with open('chocolate.p', 'wb') as f:
