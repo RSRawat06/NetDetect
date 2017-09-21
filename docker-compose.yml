@@ -11,9 +11,9 @@ services:
       - 5000:5000
     build:
       context: .
-      dockerfile: ./botnet_attention/Dockerfile
+      dockerfile: ./classifier/Dockerfile
     volumes:
-      - ./botnet_attention:/service
+      - ./classifier:/service
     networks:
       - default
     tty: true
@@ -21,9 +21,9 @@ services:
   featurization:
     build:
       context: .
-      dockerfile: ./flow_featurization/Dockerfile
+      dockerfile: ./featurizer/Dockerfile
     volumes:
-      - ./flow_featurization:/service
+      - ./featurizer:/service
     networks:
       - default
     tty: true
