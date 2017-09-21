@@ -25,7 +25,7 @@ RUN pip install -U "pip==1.5.4"
 WORKDIR /service
 
 # Copying pip requirement files
-COPY ./flow_featurization/requirements.txt ./requirements.txt
+COPY ./featurizer/requirements.txt ./requirements.txt
 
 # Install python dependencies
 RUN export C_INCLUDE_PATH=/usr/include
