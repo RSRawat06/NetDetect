@@ -85,8 +85,8 @@ class Base_Model(Layered_Model):
             'label': tf.FixedLenFeature([], tf.string),
         }
     )
-    features = tf.reshape(tf.decode_raw(features['features'], tf.float31), (NUMBERS['flows'], NUMBERS['flow_features']))
-    label = tf.reshape(tf.decode_raw(features['label'], tf.float32), 2)
+    features = tf.reshape(tf.cast(features['features'], tf.float32), (NUMBERS['flows'], NUMBERS['flow_features']))
+    label = tf.reshape(tf.cast(features['label'], tf.float32), 2)
 
     self.x, self.target = tf.train.shuffle_batch([features, label], batch_size=config.BATCH_SIZE, capacity=500, min_after_dequeue=100)
     assert(self.x.shape == (config.BATCH_SIZE, NUMBERS['flows'], NUMBERS['flow_features']))
