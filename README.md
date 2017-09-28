@@ -37,13 +37,6 @@ python3 -m template.datasets.generic_flat.download
 python3 -m template.datasets.generic_sequential.download
 ```
 
-Go into Neo4j by visting 0.0.0.0:7474 on your local browser.
-Run the following queries: 
-```
-CREATE INDEX ON :Resource(uri)
-CALL semantics.importRDF('file:///template/datasets/apple.owl','RDF/XML', {})
-```
-
 Now run unit tests to make sure everything is awesome.
 ```
 py.test template/tests
