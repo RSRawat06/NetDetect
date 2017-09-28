@@ -1,7 +1,7 @@
 # Flow featurization
 
-This software is for generating datasets that you can download using
-`python3 -m NetDetect.datasets.iscx.download`.
+This container is for generating datasets that you can download using
+`python3 -m NetDetect.datasets.iscx.download` in the other container.
 
 Unless you intend on adding a new dataset or modifying the preprocessing procedures for the default ISCX and ISOT datasets, you should not need to use this module.
 
