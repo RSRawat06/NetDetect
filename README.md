@@ -25,32 +25,32 @@ docker-compose up --build
 
 Now hop into Docker and download some files.
 ```
-cd template
-bash access_template.sh
+cd NetDetect
+bash access_NetDetect.sh
 ```
 
-Now you should be inside the template container.
+Now you should be inside the NetDetect container.
 ```
 service neo4j start
-python3 -m template.datasets.generic_double_seq.download
-python3 -m template.datasets.generic_flat.download
-python3 -m template.datasets.generic_sequential.download
+python3 -m NetDetect.datasets.generic_double_seq.download
+python3 -m NetDetect.datasets.generic_flat.download
+python3 -m NetDetect.datasets.generic_sequential.download
 ```
 
 Now run unit tests to make sure everything is awesome.
 ```
-py.test template/tests
+py.test NetDetect/tests
 ```
 
 ### Usage:
 Let's get botnet detection training up and running.
 ```
-python3 -m template.datasets.iscx.download
-python3 -m template.src.main.train
+python3 -m NetDetect.datasets.iscx.download
+python3 -m NetDetect.src.main.train
 ```
 In a seperate window, simultaneously, run:
 ```
-cd /template/src/main
+cd /NetDetect/src/main
 bash run_tensorboard.sh
 ```
 
