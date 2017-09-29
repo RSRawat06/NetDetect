@@ -1,0 +1,32 @@
+version: '3'
+
+networks:
+  default:
+
+services:
+  featurizer:
+    build:
+      context: .
+      dockerfile: ./featurizer/Dockerfile
+    volumes:
+      - ./featurizer:/featurizer
+    networks:
+      - default
+    tty: true
+
+  netdetect:
+    build:
+      context: .
+      dockerfile: ./NetDetect/Dockerfile
+    ports:
+      - 6006:6006
+      - 5000:5000
+      - 7687:7687
+      - 1337:1337
+      - 7474:7474
+    volumes:
+      - ./NetDetect:/NetDetect
+    networks:
+      - default
+    tty: true
+

@@ -1,0 +1,6 @@
+Source, Destination, Label, Protocol, Chocolate, Score
+2.3.4.2, 3.3.2.4, "BENIGN", 0xa2, True, 0
+3.3.2.4, 5.4.4.2, "BENIGN", 0xa2, False, 0
+2.3.4.2, 5.4.4.2, "MALIGNANT", 0xa0, True, 1
+5.4.4.2, 3.3.2.4, "BENIGN", 0xa2, True, 0
+2.3.4.2, 7.6.9.0, "BENIGN", 0xa2, True, 0
