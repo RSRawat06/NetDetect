@@ -1,4 +1,0 @@
-data/*
-!data/.gitkeep
-!data/graphs/.gitkeep
-!data/checkpoints/.gitkeep
