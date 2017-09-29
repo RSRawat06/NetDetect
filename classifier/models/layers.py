@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 
-class Layered_Model():
+class Layers():
   '''
   Base layer class that offers private methods for building TF layers
   '''
@@ -66,9 +66,9 @@ class Layered_Model():
 
       X_unstacked = tf.unstack(tf.transpose(X, (1, 0, 2)), name="X_unstacked")
       H_inverse, _, _ = tf.nn.static_bidirectional_rnn(fwd_gru, bwd_gru, X_unstacked, dtype=tf.float32)
-      assert(tf.stack(H_inverse).shape == (config['seq_len'], config['n_seqs'], config['n_gru_hidden']))
+      assert(tf.stack(H_inverse).shape == (config['seq_len'], config['n_seqs'], 2 * config['n_gru_hidden']))
       H = tf.transpose(H_inverse, (1, 0, 2), name="H")
-      assert(H.shape == (config['n_seqs'], config['seq_len'], config['n_gru_hidden']))
+      assert(H.shape == (config['n_seqs'], config['seq_len'], 2 * config['n_gru_hidden']))
 
       W_s_1 = tf.get_variable("W_s_1", shape=(2 * config['n_gru_hidden'], config['n_attention_hidden']))
       W_s_2 = tf.get_variable("W_s_2", shape=(config['n_attention_hidden'], 1))

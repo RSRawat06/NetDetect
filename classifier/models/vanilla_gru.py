@@ -1,5 +1,4 @@
-import tensorflow as tf
-from .base_model import Base_Model
+from .base import Base_Model
 from . import config
 
 

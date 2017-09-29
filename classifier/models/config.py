@@ -5,7 +5,7 @@ LOSS_WEIGHTING = [1, 5]
 NUMBERS = {
     'ip_features': 30,
     'flows': 11,
-    'flow_features': 10,
+    'flow_features': 13,
 }
 HIDDEN = {
     'flows_gru': 30,

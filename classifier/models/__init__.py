@@ -1,1 +1,1 @@
-from . import base_model, layered_model, vanilla_gru, self_attention, config
+from . import base, layers, vanilla_gru, self_attention, config
