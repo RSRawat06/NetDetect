@@ -21,17 +21,11 @@ RUN apt-get update \
 RUN pip install -U "setuptools==3.4.1"
 RUN pip install -U "pip==1.5.4"
 
-RUN apt-get install software-properties-common -y
-RUN add-apt-repository ppa:webupd8team/java
-RUN apt-get update
-RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
-RUN apt-get install oracle-java8-installer libpcap-dev -y
-
 # Establish working directory
-WORKDIR /featurizer
+WORKDIR /MinimumFeaturizer
 
 # Copying pip requirement files
-COPY ./featurizer/requirements.txt ./requirements.txt
+COPY ./MinimumFeaturizer/requirements.txt ./requirements.txt
 
 # Install python dependencies
 RUN export C_INCLUDE_PATH=/usr/include
