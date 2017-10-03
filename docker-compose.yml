@@ -4,12 +4,22 @@ networks:
   default:
 
 services:
-  featurizer:
+  cicflowmeter:
     build:
       context: .
-      dockerfile: ./featurizer/Dockerfile
+      dockerfile: ./CICFlowMeter/Dockerfile
     volumes:
-      - ./featurizer:/featurizer
+      - ./CICFlowMeter:/CICFlowMeter
+    networks:
+      - default
+    tty: true
+
+  minimumfeaturizer:
+    build:
+      context: .
+      dockerfile: ./MinimumFeaturizer/Dockerfile
+    volumes:
+      - ./MinimumFeaturizer:/MinimumFeaturizer
     networks:
       - default
     tty: true
