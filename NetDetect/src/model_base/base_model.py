@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from .standard_layers import StandardLayers
+
 tf.logging.set_verbosity(tf.logging.ERROR)
 tf.set_random_seed(4)
 np.random.seed(4)
@@ -118,40 +119,60 @@ class Base(StandardLayers):
 
     self.logger.info('Starting model training...')
 
+    n = 0
     for j in range(self.config.ITERATIONS):
       for i in range(0, len(X) + 1 - self.config.BATCH_SIZE,
                      self.config.BATCH_SIZE):
+
         feed_dict = {
             self.x: X[i:i + self.config.BATCH_SIZE],
             self.target: Y[i:i + self.config.BATCH_SIZE]
         }
-        _, train_acc, train_loss, train_summary = self.sess.run(
-            [self.optim, self.acc, self.loss, self.summary_op],
-            feed_dict=feed_dict)
+        try:
+          _, tpr, fpr, acc, loss, summary = self.sess.run(
+              [self.optim, self.tpr, self.fpr, self.acc, self.loss,
+               self.summary_op],
+              feed_dict=feed_dict)
+          tpr = float(tpr)
+          fpr = float(fpr)
+        except AttributeError:
+          _, acc, loss, summary = self.sess.run(
+              [self.optim, self.acc, self.loss, self.summary_op],
+              feed_dict=feed_dict)
+          tpr = "Nan"
+          fpr = "Nan"
 
-      # Save every 10 iterations
-      if j % 10 == 0:
-        self.save(self.global_step)
+        if n % 10000 == 0:
+          self.logger.info(
+              "Epoch: %f has train loss: %f and train accuracy: %f \
+               and TPR: %s and FPR: %s" % (n, loss, acc, str(tpr), str(fpr)))
+          self.train_writer.add_summary(summary, global_step=n)
 
-      if j % 1 == 0:
-        # Report training
-        self.logger.info("Epoch: " + str(j) + " has train loss: " +
-                         str(float(train_loss)) + " and train accuracy: " +
-                         str(float(train_acc)))
-        self.train_writer.add_summary(train_summary, global_step=j)
+          feed_dict = {
+              self.x: test_X[:self.config.BATCH_SIZE],
+              self.target: test_Y[:self.config.BATCH_SIZE]
+          }
+          try:
+            tpr, fpr, acc, loss, summary = self.sess.run(
+                [self.tpr, self.fpr, self.acc, self.loss, self.summary_op],
+                feed_dict=feed_dict)
+            tpr = float(tpr)
+            fpr = float(fpr)
+          except AttributeError:
+            acc, loss, summary = self.sess.run(
+                [self.acc, self.loss, self.summary_op],
+                feed_dict=feed_dict)
+            tpr = "nan"
+            fpr = "nan"
+          self.logger.info(
+              "Epoch: %f has test loss: %f and test accuracy: %f \
+               and TPR: %s and FPR: %s" % (n, loss, acc, str(tpr), str(fpr)))
+          self.test_writer.add_summary(summary, global_step=n)
 
-        # Report test
-        feed_dict = {
-            self.x: test_X[:self.config.BATCH_SIZE],
-            self.target: test_Y[:self.config.BATCH_SIZE]
-        }
-        test_acc, test_loss, test_summary = self.sess.run(
-            [self.acc, self.loss, self.summary_op],
-            feed_dict=feed_dict)
-        self.logger.info("Epoch: " + str(j) + " has test loss: " +
-                         str(float(test_loss)) + " and test accuracy: " +
-                         str(float(test_acc)))
-        self.test_writer.add_summary(test_summary, global_step=j)
+        if n % 100000 == 0:
+          self.save(self.global_step)
+
+        n += 1
 
     self.logger.info('Model finished training!')
 
