@@ -142,7 +142,7 @@ class Base(StandardLayers):
           tpr = "Nan"
           fpr = "Nan"
 
-        if n % 10000 == 0:
+        if n % self.config.REPORT_INTERVAL == 0:
           self.logger.info(
               "Epoch: %f has train loss: %f and train accuracy: %f \
                and TPR: %s and FPR: %s" % (n, loss, acc, str(tpr), str(fpr)))
@@ -169,7 +169,7 @@ class Base(StandardLayers):
                and TPR: %s and FPR: %s" % (n, loss, acc, str(tpr), str(fpr)))
           self.test_writer.add_summary(summary, global_step=n)
 
-        if n % 100000 == 0:
+        if n % self.config.SAVE_INTERVAL == 0:
           self.save(self.global_step)
 
         n += 1

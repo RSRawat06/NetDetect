@@ -6,7 +6,7 @@ GRAPHS_TRAIN_DIR = SAVES_DIR + "graphs/train/"
 GRAPHS_TEST_DIR = SAVES_DIR + "graphs/test/"
 CHECKPOINTS_DIR = SAVES_DIR + "checkpoints/"
 
-ITERATIONS = 200
+ITERATIONS = 40
 BATCH_SIZE = 19
 N_FEATURES = 4
 N_CLASSES = 10
@@ -16,4 +16,7 @@ LAYERS = {
     'h_two_encoder': 11,
     'h_two_encoded': 7
 }
+
+REPORT_INTERVAL = 15
+SAVE_INTERVAL = 15
 
