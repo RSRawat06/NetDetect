@@ -1,4 +1,4 @@
-from ..models import SequentialModel
+from ..models import FlowModel
 from . import config
 
 
@@ -7,7 +7,7 @@ def initialize_func(sess, logger):
   Initialize main function to predict using model.
   '''
   logger.debug('Starting Tensorflow session.')
-  model = SequentialModel(sess, config, logger)
+  model = FlowModel(sess, config, logger)
   logger.debug('Model instantiated.')
   model.initialize()
   logger.debug('Model initialized.')
