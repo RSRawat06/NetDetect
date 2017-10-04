@@ -1,1 +1,1 @@
-tensorboard --logdir=/NetDetect/src/main/saves/graphs
+tensorboard --logdir=/NetDetect/src/main_isot/saves/graphs
