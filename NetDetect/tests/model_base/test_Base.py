@@ -19,7 +19,7 @@ def test_shuffle_and_partition():
     flattened_X = np.concatenate([
         dataset['train']['X'],
         dataset['test']['X'],
-        dataset['val']['X'], 
+        dataset['val']['X'],
     ]).flatten()
     assert(len(set(flattened_X)) == len(flattened_X))
     flattened_Y = np.concatenate([

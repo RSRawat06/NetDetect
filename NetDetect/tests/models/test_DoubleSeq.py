@@ -27,8 +27,8 @@ def test_train():
     del(Y)
     model.initialize()
     model.train(
-        shuffled_dataset['train']['X'], 
-        shuffled_dataset['train']['Y'], 
+        shuffled_dataset['train']['X'],
+        shuffled_dataset['train']['Y'],
         shuffled_dataset['test']['X'],
         shuffled_dataset['test']['Y']
     )
@@ -61,8 +61,8 @@ def test_checkpointing():
     del(Y)
     model.initialize()
     model.train(
-        shuffled_dataset['train']['X'], 
-        shuffled_dataset['train']['Y'], 
+        shuffled_dataset['train']['X'],
+        shuffled_dataset['train']['Y'],
         shuffled_dataset['test']['X'],
         shuffled_dataset['test']['Y']
     )
@@ -102,8 +102,8 @@ def test_load():
     del(Y)
     model.initialize()
     model.train(
-        shuffled_dataset['train']['X'], 
-        shuffled_dataset['train']['Y'], 
+        shuffled_dataset['train']['X'],
+        shuffled_dataset['train']['Y'],
         shuffled_dataset['test']['X'],
         shuffled_dataset['test']['Y']
     )

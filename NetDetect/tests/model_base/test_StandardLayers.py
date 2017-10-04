@@ -42,3 +42,15 @@ def test_optimizations():
   assert(acc.shape == [])
   assert(acc.dtype == tf.float32)
 
+
+def test_binary_metrics():
+  prediction = tf.placeholder(tf.float32, (3, 5))
+  target = tf.placeholder(tf.float32, (3, 5))
+  TPR, FPR = StandardLayers()._define_binary_metrics(
+      target, prediction)
+
+  assert(TPR.shape == [])
+  assert(TPR.dtype == tf.float32)
+  assert(FPR.shape == [])
+  assert(FPR.dtype == tf.float32)
+

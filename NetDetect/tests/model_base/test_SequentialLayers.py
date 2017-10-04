@@ -2,10 +2,6 @@ from ...src.model_base import SequenceLayers
 import tensorflow as tf
 
 
-def test_word2vec():
-  pass
-
-
 def test_vanilla():
   raw = tf.placeholder(tf.float32, (3, 11, 7))
 
