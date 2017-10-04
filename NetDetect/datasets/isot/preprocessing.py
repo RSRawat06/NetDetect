@@ -1,123 +1,120 @@
-from . import config
-from ..utils import csv_utils, shaping_utils
-import numpy as np
 import csv
+import numpy as np
+from . import config
 from .logger import set_logger
 
 
-def preprocess_file(file_path):
-  '''
-  Return preprocessed dataset from raw data file.
-  Returns:
-    - dataset (list): X (np.arr), Y (np.arr)
-  '''
+def preprocess_file(file_path, n_points_cap=None):
+  set_logger.info("Initiating data loading")
 
-  set_logger.info("Starting preprocessing...")
-  return label_data(*segment_data(*load_data(file_path)))
+  fields_key = {}
+  unfields_key = {}
 
+  points = []
+  targets = []
+  key = []
 
-def load_data(file_path):
-  '''
-  Load in a CSV and parse for data.
-  Args:
-    - file_path (str): path to raw dataset file.
-  Returns:
-    - X: np.array([[0.3, 0.3...]...], dtype=float32)
-    - metadata: [{info:a, label:x}... (n_classes)]
-  '''
+  i = 0
 
-  def __featurize_row(row, headers_key):
-    '''
-    Featurize a row into a real-valued vector.
-    '''
-    feature_vector = []
-    for i, value in enumerate(row):
-      if headers_key[i] in config.numerical_fields:
-        feature_vector.append(float(value))
-    assert(len(feature_vector) == len(config.numerical_fields))
-    return np.array(feature_vector, dtype=np.float32)
-
-  def __metadatize_row(row, headers_key):
-    '''
-    Return metadatized dict for given row.
-    '''
-    metadatum = {'participants': []}
-    for i, value in enumerate(row):
-      if headers_key[i] in config.participant_fields:
-        metadatum['participants'].append(str(value))
-      elif headers_key[i] == config.seq_field:
-        metadatum['seq_id'] = str(value)
-    return metadatum
-
-  X = []
-  metadata = []
   with open(file_path, 'r') as f:
-    set_logger.debug("Opened dataset csv...")
-    for i, row in enumerate(csv.reader(f)):
-      if i == 0:
-        headers_key = csv_utils.build_headers(row)
-        set_logger.debug("Headers key generated: " + str(headers_key))
+    first_row = True
+    for row in csv.reader(f):
+      # If first row, use it to generate header rows dict
+      if first_row:
+        j = 0
+        for field in row:
+          if field in config.DESIRED_FIELDS:
+            fields_key[field] = j
+          if field in config.UNDESIRED_FIELDS:
+            unfields_key[field] = j
+          j += 1
+        for field in config.DESIRED_FIELDS:
+          assert(field in fields_key)
+        first_row = False
+        set_logger.info("Header correlation complete")
         continue
-      set_logger.debug('Loading row: ' + str(i))
-      X.append(__featurize_row(row, headers_key))
-      metadata.append(__metadatize_row(row, headers_key))
-  set_logger.debug("Basic data loading complete.")
-  return np.array(X, dtype=np.float32), metadata
+
+      # Terminate if reached points cap
+      if n_points_cap:
+        if (n_points_cap > i):
+          set_logger.info("Points cap reached. Data loading terminated.")
+          break
+      i += 1
+
+      # Process row
+      point, target = score_extraction(row, fields_key)
+
+      points.append(point)
+      targets.append(target)
+      key.append((row[unfields_key['Source']],
+                  row[unfields_key['Destination']]))
+
+  set_logger.info("All rows processed")
+  X, Y = sequentialify(points, targets, key)
+  set_logger.info("Sequentialifed")
+
+  return X, Y
 
 
-def segment_data(X, metadata):
-  '''
-  Segment X into sequences based off of metadata.
-  Args:
-    - X (np.array): data to be segmented on first dim.
-    - metadata (list of dicts): metadata used for segmentation,
-      namely 'seq_id' in this implementation.
-  Returns:
-    - new_X (np.array): segmented np.array with +1 rank.
-    - new_metadata: metadata cut to align with new_X.
-  '''
-
-  set_logger.debug("Segmenting data of shape " + str(X.shape) + "...")
-  new_X = []
-  new_metadata = []
-  seq_map = {}
-
-  set_logger.debug("Segment mapping...")
-  for i in range(len(X)):
-    for seq_id in metadata[i]['participants']:
-      if seq_id not in seq_map:
-        seq_map[seq_id] = len(new_X)
-        new_X.append([X[i]])
-        new_metadata.append({"ip": seq_id})
+def score_extraction(row, fields_key):
+  point = np.empty(len(fields_key) - 1, dtype=np.float32)
+  i = 0
+  for field, index_ in fields_key.items():
+    if field == "Score":
+      if row[index_] == "0":
+        target = [1, 0]
+      elif row[index_] == "1":
+        target = [0, 1]
       else:
-        new_X[seq_map[seq_id]].append(X[i])
-
-  set_logger.debug("Average seq len: " + str(len(X) / len(new_X)))
-
-  set_logger.debug("Fixing sequence length padding/cutting...")
-  for i in range(len(new_X)):
-    new_X[i] = shaping_utils.fix_vector_length(new_X[i], config.SEQ_LEN)
-
-  set_logger.debug("Data segmentation complete.")
-  return np.array(new_X, dtype=np.float32), new_metadata
+        raise Exception
+      continue
+    point[i] = row[index_]
+    i += 1
+  return point, target
 
 
-def label_data(X, metadata):
-  '''
-  Label X based off of metadata.
-  Args:
-    - X (np.array): data to be labelled.
-    - metadata (list of dicts): metadata holding in this case, 'y'.
-  Returns:
-    - X (np.array): the original X from args.
-    - Y (np.array): the new labels for dataset.
-  '''
+def sequentialify(data, targets, supp_data):
+  set_logger.info("Initiating sequentificalication")
 
-  set_logger.debug("Labelling data...")
-  Y = []
-  for datum in metadata:
-    Y.append(shaping_utils.one_hot(
-        1 if datum['ip'] in config.malicious_ips else 0, [0, 1]))
-  set_logger.debug("Data labelled!")
-  return X, np.array(Y, dtype=np.int32)
+  sequence_match = []
+  sequence_match_key = {}
+
+  # Assign to streams
+  for i, point in enumerate(data):
+
+    # Handle src
+    if (supp_data[i][0] in sequence_match_key):
+      sequence_match[sequence_match_key[
+          supp_data[i][0]]]['approved'].append(point)
+    else:
+      sequence_match_key[supp_data[i][0]] = len(sequence_match)
+      sequence_match.append({'approved': [point], 'score': targets[i]})
+
+    # Handle dest
+    if (supp_data[i][1] in sequence_match_key):
+      sequence_match[sequence_match_key[
+          supp_data[i][1]]]['approved'].append(point)
+    else:
+      sequence_match_key[supp_data[i][1]] = len(sequence_match)
+      sequence_match.append({'approved': [point], 'score': targets[i]})
+
+  del(data)
+  del(targets)
+  del(supp_data)
+
+  seq_points = []
+  seq_targets = []
+  len_training = 0
+
+  # Segment into chunks of uniform length
+  for usr, seq_id in sequence_match_key.items():
+    info = sequence_match[seq_id]
+    for i in range(0, len(info['approved']) - config.MAX_SEQUENCE_LENGTH):
+      seq_points.append(info['approved'][i:i + config.MAX_SEQUENCE_LENGTH])
+      seq_targets.append(info['score'])
+      len_training += 1
+
+  set_logger.info("Sequentification complete")
+
+  return seq_points, seq_targets
 
