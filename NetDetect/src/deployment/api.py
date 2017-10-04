@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from flask_api import FlaskAPI
 from flask_cors import CORS
-from ..main import load
+from ..main_isot import load
 from .logger import api_logger
 import tensorflow as tf
 
