@@ -5,7 +5,7 @@ Module for shaping/manipulating data.
 import numpy as np
 
 
-def one_hot(value, candidates):
+def build_one_hot(value, candidates):
   '''
   Returns proper one-hot representation of a value.
   Invalid value will raise Value Error.
@@ -15,6 +15,7 @@ def one_hot(value, candidates):
   Returns:
     - vector (np.arr): one-hot vector represenation.
   '''
+
   for i, candidate in enumerate(candidates):
     if candidate == value:
       vector = np.zeros(len(candidates))
@@ -33,11 +34,88 @@ def fix_vector_length(vector, length):
   Returns:
     - vector (np.arr): vector with proper length in dim 1.
   '''
-  vector = np.array(vector)
+
   right_padding = length - min(length, vector.shape[0])
-  padding_shape = [[0, right_padding]] + [[0, 0] for _ in range(len(vector.shape) - 1)]
+  padding_shape = [[0, right_padding]] + [[0, 0] for _ in range
+                                          (len(vector.shape) - 1)]
   vector = np.pad(vector[:length], padding_shape,
                   'constant', constant_values=0)
+
+  # Sanity check.
   assert(vector.shape[0] == length)
+
   return vector
+
+
+def segment_vector(vector, length):
+  '''
+  Get continuous samples of specified length from
+  vector.
+  Args:
+    - vector (np.arr): input vector.
+    - length (int): desired length.
+  Returns:
+    - vector (np.arr): vector with proper length in dim 1.
+  '''
+
+  if vector.shape[0] <= length:
+    return [fix_vector_length(vector, length)]
+
+  cut_vectors = []
+  for i in range(0, vector.shape[0] - length):
+    cut_vectors.append(vector[i:i + length])
+
+  return cut_vectors
+
+
+def partition_dataset(X, Y, n_test, n_val):
+  '''
+  Partition a dataset into train, test, validation
+  splits.
+  Args:
+    - X (np.array)
+    - Y (np.array)
+    - n_test (int): number of test points
+    - n_val (int): number of validation points
+  Return:
+    - result:
+      {"train": {"X": np.arr, "Y": np.arr},
+      "test": {"X": np.arr, "Y": np.arr},
+      "val": {"X": np.arr, "Y": np.arr}}.
+  '''
+
+  # X, Y partitioned as: [train, test, val]
+
+  n_train = X.shape[0] - n_test - n_val
+
+  train_X = X[:n_train]
+  test_X = X[n_train:(n_train + n_test)]
+  val_X = X[(n_train + n_test):]
+  del(X)
+
+  train_Y = Y[:n_train]
+  test_Y = Y[n_train:(n_train + n_test)]
+  val_Y = Y[(n_train + n_test):]
+  del(Y)
+
+  return {"train": {"X": train_X, "Y": train_Y},
+          "test": {"X": test_X, "Y": test_Y},
+          "val": {"X": val_X, "Y": val_Y}}
+
+
+def shuffle_twins(X, Y):
+  '''
+  Shuffle two np.arrays in parallel.
+  Shuffles on axis=0.
+  Args:
+    - X (np.array)
+    - Y (np.array)
+  Return:
+    - X_shuffled (np.array)
+    - Y_shuffled (np.array)
+  '''
+
+  assert(X.shape[0] == Y.shape[0])
+  p = np.random.permutation(X.shape[0])
+  return X[p], Y[p]
 
