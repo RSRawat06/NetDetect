@@ -1,17 +1,7 @@
 # NetDetect: Botnet Detection without Feature Engineering
-We apply recurrent neural networks with attention mechanisms to detect hosts infected by botnets in an enterprise network, without using any engineered features beyond basic packet properties.
+NetDetect applies recurrent neural networks to detect devices infected by botnets in an enterprise-size network.
 
 [![Maintenance Intended](http://maintained.tech/badge.svg)](http://maintained.tech/)
-
-### Overview
-We capture network packets (.pcap) from enterpise networks (currently supported datasets: ISOT, ISCX). We sort the packets into network flows. We create data points for each host (which is either infected/benign), where each point is a 3-dimensional tensor: a sequence of network flows involving the IP, a sequence of packets composing each network flow, and a feature vector representing each packet. To attempt to learn encoding functions that generalize across botnet species, even previously unseen species, we limit ourselves to basic out-of-the-box packet features and avoid engineered features and heuristics.
-
-We employ an end-to-end differentiable recurrent neural network with attention mechanisms, to encode network flows and then predict based off of packet history whether a host has been infected. A simple RNN cell (LSTM/GRU) is used to encode sequences of packets, while sequences of flows are first encoded through RNN cells and then passed through a self-attention mechanism. The resulting vector is passed through a dense layer to obtain the prediction.
-
-# Goals
-* Achieve close to state-of-art scores without using a single engineered feature
-* Prove or invalidate my assumption that neural network architectures designed for natural language also carry over to network logs
-* Prove that our network can learn an encoding function that generalizes across botnets and potentially even across multiple network-related tasks
 
 ### Requirements
 * Docker-CE version 17.06.2-ce
@@ -32,12 +22,9 @@ bash access_NetDetect.sh
 Now you should be inside the NetDetect container.
 ```
 service neo4j start
-python3 -m NetDetect.datasets.generic_double_seq.download
-python3 -m NetDetect.datasets.generic_flat.download
-python3 -m NetDetect.datasets.generic_sequential.download
 ```
 
-Now run unit tests to make sure everything is awesome.
+Now run unit tests to make sure everything builds ok.
 ```
 py.test NetDetect/tests
 ```
@@ -46,11 +33,11 @@ py.test NetDetect/tests
 Let's get botnet detection training up and running.
 ```
 python3 -m NetDetect.datasets.iscx.download
-python3 -m NetDetect.src.main.train
+python3 -m NetDetect.src.main_iscx.train
 ```
 In a seperate window, simultaneously, run:
 ```
-cd /NetDetect/src/main
+cd /NetDetect/src/main_iscx
 bash run_tensorboard.sh
 ```
 
@@ -61,7 +48,7 @@ bash run_tensorboard.sh
 
 ### Contribute
 I appreciate all contributions. Just make a pull request.
-Contributors are listed under `contributors.txt`.
+Contributors are listed under 'contributors.txt'.
 
 ## License
 MIT License
