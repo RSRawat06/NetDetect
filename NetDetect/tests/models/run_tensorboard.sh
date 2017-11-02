@@ -1,1 +1,0 @@
-tensorboard --logdir double_seq_train:/NetDetect/tests/models/saves/double_seq/graphs,flat_train:/NetDetect/tests/models/saves/flat/graphs,sequential_train:/NetDetect/tests/models/saves/sequential/graphs
