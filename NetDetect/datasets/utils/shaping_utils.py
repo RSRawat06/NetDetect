@@ -62,7 +62,7 @@ def segment_vector(vector, length):
     return [fix_vector_length(vector, length)]
 
   cut_vectors = []
-  for i in range(0, vector.shape[0] - length):
+  for i in range(0, vector.shape[0] + 1 - length):
     cut_vectors.append(vector[i:i + length])
 
   return cut_vectors
