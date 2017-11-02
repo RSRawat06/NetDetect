@@ -1,6 +1,4 @@
 import tensorflow as tf
-from gensim.models.keyedvectors import KeyedVectors
-import numpy as np
 
 
 class SequenceLayers():
@@ -42,7 +40,6 @@ class SequenceLayers():
 
       W = tf.get_variable("W", dtype=tf.float32,
                           shape=(2 * config['h_gru'], config['h_dense']))
-
       b = tf.get_variable("bias", shape=(config['h_dense']))
       A = tf.tanh(tf.matmul(O, W) + b, name="A")
       assert(A.shape == (config['n_batches'], config['h_dense']))
@@ -83,6 +80,7 @@ class SequenceLayers():
 
       W_s_1 = tf.get_variable("W_s_1", dtype=tf.float32,
                               shape=(2 * config['h_gru'], config['h_att']))
+      b_s_1 = tf.get_variable("bias_s_1", shape=(config['h_att']))
       r_mid = tf.tanh(
           tf.matmul(
               tf.reshape(
@@ -93,7 +91,7 @@ class SequenceLayers():
                   )
               ),
               W_s_1
-          ),
+          ) + b_s_1,
           name="r_mid"
       )
       assert(r_mid.shape ==
@@ -101,9 +99,10 @@ class SequenceLayers():
 
       W_s_2 = tf.get_variable("W_s_2", dtype=tf.float32,
                               shape=(config['h_att'], 1))
+      b_s_2 = tf.get_variable("bias_s_2", shape=(1))
       r = tf.nn.softmax(
           tf.reshape(
-              tf.squeeze(tf.matmul(r_mid, W_s_2)),
+              tf.squeeze(tf.matmul(r_mid, W_s_2) + b_s_2),
               (config['n_batches'], config['n_steps'])
           ),
           name="r"
@@ -126,42 +125,35 @@ class SequenceLayers():
 
       return A, H
 
-  def _embedding_layer(self, X, var_scope, config):
+  def _dense_layer(self, X, var_scope, config):
     '''
-    Builds a layer for fetching embeddings based on id.
+    Predicts end result.
     Args:
-      X - input data of shape (batch)
-      var_scope - string name of tf variable scope
+      X - input data of shape (batch, features).
+      var_scope - string name of tf variable scope.
       config {
-          'emb_path': path to embedding word2vec file,
-          'emb_dim': dimensions of each word embedding,
+          'n_batches': number of batches,
+          'n_input': number of input features,
+          'n_hidden': number of hidden units,
+          'n_output': number of potential output classes
         }
     '''
 
-    self.logger.debug('Creating embedding layer...')
+    assert(type(var_scope) == str)
+    assert(type(config) == dict)
+    assert(X.shape == (config['n_batches'], config['n_input']))
 
-    self.logger.debug('Loading word2vec file...')
-    model = KeyedVectors.load_word2vec_format(config['emb_path'])
+    with tf.variable_scope(var_scope):
+      W_1 = tf.get_variable("W_1", shape=(config['n_input'],
+                                          config['n_hidden']))
+      b_1 = tf.get_variable("bias_1", shape=(config['n_hidden']))
+      A = tf.tanh(tf.matmul(X, W_1) + b_1, name="A")
 
-    self.logger.debug('Creating inverse vocab...')
-    vocab = {}
-    for k, v in model.vocab.items():
-      vocab[k] = v.index
+      W_2 = tf.get_variable("W_2", shape=(config['n_hidden'],
+                                          config['n_output']))
+      b_2 = tf.get_variable("bias_2", shape=(config['n_output']))
+      output = tf.tanh(tf.matmul(A, W_2) + b_2, name="output")
 
-    self.logger.debug('Creating embedding tensor...')
-    embeddings = np.zeros((len(vocab), config['emb_dim']))
-    for k, v in model.vocab.items():
-      embeddings[v.index] = model[k]
-    del(model)
-    del(vocab)
-
-    self.logger.debug('Defining TF embedding look up layer...')
-    embedded_X = tf.cast(
-        tf.nn.embedding_lookup(embeddings, X),
-        name="embedded_x",
-        dtype=tf.float32
-    )
-
-    self.logger.debug('Embedding layer created.')
-    return embedded_X
+      assert(output.shape == (config['n_batches'], config['n_output']))
+      return output
 

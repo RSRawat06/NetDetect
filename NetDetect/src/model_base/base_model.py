@@ -23,7 +23,6 @@ class Base(StandardLayers):
 
     self.sess = sess
     self.config = config
-    self.saver = None
     self.logger = logger
     self.model_name = "default.model"
     self.global_step = tf.Variable(0,
@@ -38,14 +37,12 @@ class Base(StandardLayers):
     '''
 
     self.logger.debug('Initializing model...')
-    self.build_model()
 
     self.logger.debug('Model built. Initializing model writer...')
     self.train_writer = tf.summary.FileWriter(self.config.GRAPHS_TRAIN_DIR,
                                               self.sess.graph)
     self.test_writer = tf.summary.FileWriter(self.config.GRAPHS_TEST_DIR,
                                              self.sess.graph)
-
     self.logger.debug('Writer initialized. Initializing TF graph...')
     self.var_init = tf.global_variables_initializer()
     self.var_init.run()
@@ -53,126 +50,76 @@ class Base(StandardLayers):
 
     self.logger.info('Model initialized.')
 
-  def save(self, global_step=None):
+  @property
+  def saver(self):
+    try:
+      return self.tf_saver
+    except AttributeError:
+      self.logger.debug('Saver not initiated, creating new model Saver.')
+      self.tf_saver = tf.train.Saver(tf.global_variables())
+
+  def save(self, global_step):
     '''
     Save the current variables in graph.
-    Optional option to save for global_step (used in Train).
     '''
 
     self.logger.debug('Saving model...')
-    if self.saver is None:
-      self.logger.debug('Saver not initiated, creating new model Saver.')
-      self.saver = tf.train.Saver(tf.global_variables())
-
-    if global_step is None:
-      self.saver.save(self.sess,
-                      self.config.CHECKPOINTS_DIR + self.model_name)
-      self.logger.debug('Saved with no global step.')
-    else:
-      self.saver.save(self.sess,
-                      self.config.CHECKPOINTS_DIR + self.model_name,
-                      global_step=self.global_step)
-      self.logger.debug('Saved with global step.')
+    self.saver.save(self.sess,
+                    self.config.CHECKPOINTS_DIR + self.model_name,
+                    global_step=self.global_step)
+    self.logger.debug('Saved with global step.')
 
     self.logger.info('Model saved.')
 
-  def restore(self, resume=True):
+  def restore(self):
     '''
     Restore TF computation graph from saved checkpoint.
-    Args:
-      - resume (bool): resume last checkpoint or restore standard
-                       save file.
     '''
 
     self.logger.debug('Restoring model...')
-
-    if self.saver is None:
-      self.logger.debug('Saver not initiated, creating new model Saver.')
-      self.saver = tf.train.Saver(tf.global_variables())
-
-    if resume:
-      self.logger.debug('Resume enabled. Finding newest model checkpoint.')
-
-      ckpt = tf.train.latest_checkpoint(self.config.CHECKPOINTS_DIR)
-      if ckpt:
-        self.logger.debug('Model checkpoint found. Restoring...')
-        self.saver.restore(self.sess, ckpt)
-        self.logger.info('Model restored. Resuming from checkpoint.')
-        return True
-      else:
-        self.logger.error('Resume enabled but no model checkpoints found. \
-                           \n Terminating...')
-        raise ValueError()
+    ckpt = tf.train.latest_checkpoint(self.config.CHECKPOINTS_DIR)
+    if ckpt:
+      self.logger.debug('Model checkpoint found. Restoring...')
+      self.saver.restore(self.sess, ckpt)
+      self.logger.info('Model restored. Resuming from checkpoint.')
+      return True
     else:
-      self.logger.debug('Resume disabled. Restoring from default save...')
-      self.saver.restore(
-          self.sess, self.config.CHECKPOINTS_DIR + self.model_name)
-      self.logger.info('Model restored.')
+      self.logger.error('Resume enabled but no model checkpoints found. \
+                         \n Terminating...')
+      raise ValueError()
+    self.logger.info('Model restored.')
 
-  def train(self, X, Y, test_X, test_Y):
+  def train(self, X, Y, report_func):
     '''
     Run model training. Model must have been initialized.
     Args:
       X (np.arr): featured data. Assuming len(X) > batch size.
       Y (np.arr): labels. Assuming len(Y) > batch size.
+      report_func: function to call whenever reporting is triggered.
+                   takes one argument: sub_epoch (int).
     '''
 
     self.logger.info('Starting model training...')
 
-    n = 0
-    for j in range(self.config.ITERATIONS):
-      for i in range(0, len(X) + 1 - self.config.BATCH_SIZE,
-                     self.config.BATCH_SIZE):
-
+    sub_epoch = 0
+    for epoch in range(self.config.ITERATIONS):
+      batcher = self.yield_batch(X, Y)
+      for x_batch, y_batch in next(batcher):
         feed_dict = {
-            self.x: X[i:i + self.config.BATCH_SIZE],
-            self.target: Y[i:i + self.config.BATCH_SIZE]
+            self.x: x_batch,
+            self.target: y_batch
         }
-        try:
-          _, tpr, fpr, acc, loss, summary = self.sess.run(
-              [self.optim, self.tpr, self.fpr, self.acc, self.loss,
-               self.summary_op],
-              feed_dict=feed_dict)
-          tpr = float(tpr)
-          fpr = float(fpr)
-        except AttributeError:
-          _, acc, loss, summary = self.sess.run(
-              [self.optim, self.acc, self.loss, self.summary_op],
-              feed_dict=feed_dict)
-          tpr = "Nan"
-          fpr = "Nan"
+        _, loss = self.sess.run(
+            [self.optim, self.loss],
+            feed_dict=feed_dict)
 
-        if n % self.config.REPORT_INTERVAL == 0:
-          self.logger.info(
-              "Epoch: %f has train loss: %f and train accuracy: %f \
-               and TPR: %s and FPR: %s" % (n, loss, acc, str(tpr), str(fpr)))
-          self.train_writer.add_summary(summary, global_step=n)
+        if sub_epoch % self.config.REPORT_INTERVAL == 0:
+          report_func(sub_epoch)
 
-          feed_dict = {
-              self.x: test_X[:self.config.BATCH_SIZE],
-              self.target: test_Y[:self.config.BATCH_SIZE]
-          }
-          try:
-            tpr, fpr, acc, loss, summary = self.sess.run(
-                [self.tpr, self.fpr, self.acc, self.loss, self.summary_op],
-                feed_dict=feed_dict)
-            tpr = float(tpr)
-            fpr = float(fpr)
-          except AttributeError:
-            acc, loss, summary = self.sess.run(
-                [self.acc, self.loss, self.summary_op],
-                feed_dict=feed_dict)
-            tpr = "nan"
-            fpr = "nan"
-          self.logger.info(
-              "Epoch: %f has test loss: %f and test accuracy: %f \
-               and TPR: %s and FPR: %s" % (n, loss, acc, str(tpr), str(fpr)))
-          self.test_writer.add_summary(summary, global_step=n)
-
-        if n % self.config.SAVE_INTERVAL == 0:
+        if sub_epoch % self.config.SAVE_INTERVAL == 0:
           self.save(self.global_step)
 
-        n += 1
+        sub_epoch += 1
 
     self.logger.info('Model finished training!')
 
@@ -189,67 +136,78 @@ class Base(StandardLayers):
 
     self.logger.info('Starting model predictions...')
     predictions = []
-    for i in range(0, len(X) + 1 - self.config.BATCH_SIZE,
-                   self.config.BATCH_SIZE):
+    batcher = self.yield_batch(X)
+    for x_batch in next(batcher):
       feed_dict = {
-          self.x: X[i:i + self.config.BATCH_SIZE]
+          self.x: x_batch,
       }
       predictions += list(self.sess.run([self.prediction],
                           feed_dict=feed_dict)[0])
     self.logger.info('Model finished predicting!')
     return np.array(predictions)
 
-  def shuffle_and_partition(self, X, Y, n_test, n_val):
+  def evaluate(self, X, Y, prefix=""):
     '''
-    Shuffle and partition input data.
+    Run model evaluation. Model must have been initialized.
     Args:
-      - X (np.array): X data
-      - Y (np.array): target to be shuffled in sync
-      - n_test (int): number of test points
-      - n_val (int): number of validation points
-    Return:
-      - result:
-        {"train": {"X": np.arr, "Y": np.arr},
-        "test": {"X": np.arr, "Y": np.arr},
-        "val": {"X": np.arr, "Y": np.arr}}.
+      X (np.arr): featured data. Assuming len(X) > batch size.
+      Y (np.arr): labels. Assuming len(Y) > batch size.
+      Prefix (str): prefix for summary tags.
     '''
 
-    n_train = X.shape[0] - n_test - n_val
-    self.logger.debug('Shuffling and partitioning data...')
+    batcher = self.yield_batch(X, Y)
+    all_loss = []
+    all_tpr = []
+    all_fpr = []
+    all_acc = []
 
-    self.logger.debug('Shuffling X, Y in sync...')
-    p = np.random.permutation(X.shape[0])
-    shuffled_X, shuffled_Y = X[p], Y[p]
-    del(p)
-    del(X)
-    del(Y)
-    self.logger.debug('Finished shuffling dataset.')
+    for x_batch, y_batch in next(batcher):
+      feed_dict = {
+          self.x: x_batch,
+          self.target: y_batch
+      }
 
-    # Structured as: [train, test, val]
-    self.logger.debug('Partitioning with training size: ' + str(n_train) +
-                      ' test size: ' + str(n_test) + ' and val size: ' +
-                      str(n_val) + '...')
-    self.logger.debug('First partitioning X...')
-    train_X = shuffled_X[:n_train]
-    test_X = shuffled_X[n_train:(n_train + n_test)]
-    val_X = shuffled_X[(n_train + n_test):]
-    del(shuffled_X)
+      tpr, fpr, acc, loss = self.sess.run(
+          [self.tpr, self.fpr, self.acc, self.loss],
+          feed_dict=feed_dict)
+      tpr = float(tpr)
+      fpr = float(fpr)
+      all_loss.append(loss)
+      all_tpr.append(tpr)
+      all_fpr.append(fpr)
+      all_acc.append(acc)
 
-    self.logger.debug('Finished partitioning X. Now partitioning Y...')
-    train_Y = shuffled_Y[:n_train]
-    test_Y = shuffled_Y[n_train:(n_train + n_test)]
-    val_Y = shuffled_Y[(n_train + n_test):]
-    del(shuffled_Y)
-    self.logger.debug('Finished partitioning Y.')
+    avg_loss = np.mean(all_loss)
+    avg_tpr = np.mean(all_tpr)
+    avg_fpr = np.mean(all_fpr)
+    avg_acc = np.mean(all_acc)
 
-    self.logger.info('Finished shuffling and partitioning.')
+    summary = tf.Summary()
+    summary.value.add(tag="%s/Accuracy" % prefix,
+                      simple_value=avg_acc)
+    summary.value.add(tag="%s/Loss" % prefix, simple_value=avg_loss)
+    if all_fpr:
+      summary.value.add(tag="%s/FPR" % prefix, simple_value=avg_fpr)
+    if all_tpr:
+      summary.value.add(tag="%s/TPR" % prefix, simple_value=avg_tpr)
 
-    uniques, counts = np.unique(np.argmax(train_Y, 1), return_counts=True)
-    for i in range(len(uniques)):
-      self.logger.debug(
-          'Class: ' + str(uniques[i]) + '; count: ' + str(counts[i]))
+    return avg_loss, avg_acc, avg_tpr, avg_fpr, summary
 
-    return {"train": {"X": train_X, "Y": train_Y},
-            "test": {"X": test_X, "Y": test_Y},
-            "val": {"X": val_X, "Y": val_Y}}
+  def yield_batch(self, X, Y=None):
+    """
+    Break arrays into batches.
+    Args:
+      X (np.arr): mandatory first arr
+      Y (np.arr): optional second arr
+    """
+
+    total_batches = X.shape[0] // self.config.BATCH_SIZE
+
+    for i in range(total_batches):
+      i = i * self.config.BATCH_SIZE
+      if Y is not None:
+        yield X[i:(i + self.config.BATCH_SIZE)], \
+            Y[i:(i + self.config.BATCH_SIZE)]
+      else:
+        yield X[i:(i + self.config.BATCH_SIZE)]
 
