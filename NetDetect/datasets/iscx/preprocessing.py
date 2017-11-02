@@ -1,5 +1,5 @@
 from . import config
-from ..utils import csv_utils, shaping_utils
+from ..utils import csv_utils, shaping_utils, analysis_utils
 import numpy as np
 import csv
 from .logger import set_logger
@@ -13,7 +13,19 @@ def preprocess_file(file_path):
   '''
 
   set_logger.info("Starting preprocessing...")
-  return label_data(*segment_data(*load_data(file_path)))
+  return label_data(*segment_histories(*separate_ips(*load_data(file_path))))
+
+
+def identify_participants(row, headers_key):
+  '''
+  Return participants for a given row.
+  '''
+
+  participants = []
+  for i, value in enumerate(row):
+    if headers_key[i] in config.participant_fields:
+      participants.append(str(value))
+  return participants
 
 
 def load_data(file_path):
@@ -26,31 +38,9 @@ def load_data(file_path):
     - metadata: [{info:a, label:x}... (n_classes)]
   '''
 
-  def __featurize_row(row, headers_key):
-    '''
-    Featurize a row into a real-valued vector.
-    '''
-    feature_vector = []
-    for i, value in enumerate(row):
-      if headers_key[i] in config.numerical_fields:
-        feature_vector.append(float(value))
-    assert(len(feature_vector) == len(config.numerical_fields))
-    return np.array(feature_vector, dtype=np.float32)
+  feature_vectors = []
+  participating_ips = []
 
-  def __metadatize_row(row, headers_key):
-    '''
-    Return metadatized dict for given row.
-    '''
-    metadatum = {'participants': []}
-    for i, value in enumerate(row):
-      if headers_key[i] in config.participant_fields:
-        metadatum['participants'].append(str(value))
-      elif headers_key[i] == config.seq_field:
-        metadatum['seq_id'] = str(value)
-    return metadatum
-
-  X = []
-  metadata = []
   with open(file_path, 'r') as f:
     set_logger.debug("Opened dataset csv...")
     for i, row in enumerate(csv.reader(f)):
@@ -58,66 +48,95 @@ def load_data(file_path):
         headers_key = csv_utils.build_headers(row)
         set_logger.debug("Headers key generated: " + str(headers_key))
         continue
+
       set_logger.debug('Loading row: ' + str(i))
-      X.append(__featurize_row(row, headers_key))
-      metadata.append(__metadatize_row(row, headers_key))
+      feature_vectors.append(shaping_utils.featurize_row(
+          row, headers_key, config.numerical_fields))
+      participating_ips.append(identify_participants(row, headers_key))
+
   set_logger.debug("Basic data loading complete.")
-  return np.array(X, dtype=np.float32), metadata
+
+  return np.array(feature_vectors, dtype=np.float32), participating_ips
 
 
-def segment_data(X, metadata):
+def separate_ips(feature_vectors, participating_ips):
   '''
-  Segment X into sequences based off of metadata.
+  Segment feature_vectors into their IPs.
+  Essentially creates array of feature vectors that
+  a given IP was involved in for each IP.
   Args:
-    - X (np.array): data to be segmented on first dim.
-    - metadata (list of dicts): metadata used for segmentation,
-      namely 'seq_id' in this implementation.
+    - feature_vectors (np.array)
+    - participating_ips (list(str))
   Returns:
-    - new_X (np.array): segmented np.array with +1 rank.
-    - new_metadata: metadata cut to align with new_X.
+    - X (np.array): array of feature vectors
+    - ip_addresses: corresponding IP addresses for entries in X
   '''
 
-  set_logger.debug("Segmenting data of shape " + str(X.shape) + "...")
+  X = []
+  ip_addresses = []
+  encountered_ip_count = 0
+
+  # Maps a given IP address to its history's index in X.
+  ip_history_map = {}
+
+  set_logger.debug("Mapping history for each IP...")
+  for i in range(feature_vectors.shape[0]):
+    for ip in participating_ips[i]:
+      if ip not in ip_history_map:
+        ip_history_map[ip] = encountered_ip_count
+        X.append([])
+        ip_addresses.append(ip)
+        encountered_ip_count += 1
+      X[ip_history_map[ip]].append(feature_vectors[i])
+
+  set_logger.debug("Separation by IP is complete.")
+  set_logger.debug("Average history length for each ip: " +
+                   str(len(X) / encountered_ip_count))
+
+  return X, ip_addresses
+
+
+def segment_histories(X, ip_addresses):
   new_X = []
-  new_metadata = []
-  seq_map = {}
+  new_ip_addresses = []
 
-  set_logger.debug("Segment mapping...")
-  for i in range(len(X)):
-    for seq_id in metadata[i]['participants']:
-      if seq_id not in seq_map:
-        seq_map[seq_id] = len(new_X)
-        new_X.append([X[i]])
-        new_metadata.append({"ip": seq_id})
-      else:
-        new_X[seq_map[seq_id]].append(X[i])
+  total_segment_counts = 0
+  for i in range(X.shape[0]):
+    segments = shaping_utils.segment_vector(X[i], config.SEQ_LEN)
+    new_X += segments
+    new_ip_addresses += segments.shape[0] * [ip_addresses[i]]
 
-  set_logger.debug("Average seq len: " + str(len(X) / len(new_X)))
+    total_segment_counts += segments.shape[0]
 
-  set_logger.debug("Fixing sequence length padding/cutting...")
-  for i in range(len(new_X)):
-    new_X[i] = shaping_utils.fix_vector_length(new_X[i], config.SEQ_LEN)
+  set_logger.debug("Average seg count: " +
+                   str(total_segment_counts / len(new_X)))
 
-  set_logger.debug("Data segmentation complete.")
-  return np.array(new_X, dtype=np.float32), new_metadata
+  set_logger.debug("History segmentation complete.")
+  return np.array(new_X, dtype=np.float32), new_ip_addresses
 
 
-def label_data(X, metadata):
+def label_data(X, ip_addresses):
   '''
-  Label X based off of metadata.
+  Label data.
   Args:
-    - X (np.array): data to be labelled.
-    - metadata (list of dicts): metadata holding in this case, 'y'.
+    - X (np.array).
+    - ip_addresses (list of str).
   Returns:
     - X (np.array): the original X from args.
     - Y (np.array): the new labels for dataset.
   '''
 
-  set_logger.debug("Labelling data...")
-  Y = []
-  for datum in metadata:
-    Y.append(shaping_utils.one_hot(
-        1 if datum['ip'] in config.malicious_ips else 0, [0, 1]))
+  Y = np.full(X.shape[0], fill_value=-1, dtype=np.int32)
+  for i, ip in enumerate(ip_addresses):
+    Y[i] = shaping_utils.build_one_hot(
+        1 if ip in config.malicious_ips else 0,
+        [0, 1]
+    )
   set_logger.debug("Data labelled!")
-  return X, np.array(Y, dtype=np.int32)
+
+  class_counts = analysis_utils.count_classes(Y)
+  set_logger.debug("Class distribution is malignant: '" +
+                   str(class_counts['1']) +
+                   "', benign: '" + str(class_counts['0']) + "'.")
+  return X, Y
 
