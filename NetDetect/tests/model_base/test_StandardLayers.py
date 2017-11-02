@@ -2,21 +2,6 @@ from ...src.model_base import StandardLayers
 import tensorflow as tf
 
 
-def test_dense():
-  X = tf.placeholder(tf.float32, (3, 7))
-  encoder_config = {
-      'n_batches': 3,
-      'n_input': 7,
-      'n_hidden': 11,
-      'n_output': 5
-  }
-  encoded = StandardLayers()._dense_layer(
-      X, 'encoder', encoder_config)
-
-  assert(encoded.shape == (3, 5))
-  assert(encoded.dtype == tf.float32)
-
-
 def test_prediction():
   X = tf.placeholder(tf.float32, (3, 7))
   predictor_config = {

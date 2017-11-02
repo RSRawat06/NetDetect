@@ -1,5 +1,6 @@
 from ....datasets.utils import csv_utils
 import unittest
+import numpy as np
 
 
 class TestCSVUtils(unittest.TestCase):
@@ -23,9 +24,10 @@ class TestCSVUtils(unittest.TestCase):
 
     def __valid_numerical_fields():
       numerical_fields = ["a", "b", "e"]
-      self.assertEqual(np.all(csv_utils.featurize_row(row, headers_key, numerical_fields),
-                       np.array([5.0, 3.2, 3.3], np.float32)))
-    
+      assert(
+          np.all(csv_utils.featurize_row(row, headers_key, numerical_fields) ==
+                 np.array([5.0, 3.2, 3.3], dtype=np.float32)))
+
     __invalid_numerical_fields()
     __valid_numerical_fields()
 

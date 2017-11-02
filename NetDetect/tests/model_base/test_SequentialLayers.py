@@ -41,3 +41,19 @@ def test_attention():
   assert(encoded_seq.shape == (3, 11, 2 * 13))
   assert(encoded_seq.dtype == tf.float32)
 
+
+def test_dense():
+  X = tf.placeholder(tf.float32, (3, 7))
+  encoder_config = {
+      'n_batches': 3,
+      'n_input': 7,
+      'n_hidden': 11,
+      'n_output': 5
+  }
+  encoded = SequenceLayers()._dense_layer(
+      X, 'encoder', encoder_config)
+
+  assert(encoded.shape == (3, 5))
+  assert(encoded.dtype == tf.float32)
+
+
