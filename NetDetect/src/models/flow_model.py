@@ -35,10 +35,10 @@ class FlowModel(Base, SequenceLayers):
         'n_steps': config.N_STEPS,
         'n_features': config.N_FEATURES,
         'h_gru': config.LAYERS['h_gru'],
-        'h_att': config.LAYERS['h_att'],
+        # 'h_att': config.LAYERS['h_att'],
         'h_dense': config.ENCODED_DIM
     }
-    encoded_state, encoded_seq = self._attention_encoder_layer(
+    encoded_state, encoded_seq = self._encoder_layer(
         self.x, "encoder", encoder_config)
 
     predictor_config = {
@@ -66,7 +66,6 @@ class FlowModel(Base, SequenceLayers):
         self.loss,
         var_list=tf.trainable_variables(),
         global_step=self.global_step)
-    self.summary_op = self._summaries()
 
     self.logger.info('Model built.')
 
