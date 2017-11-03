@@ -1,5 +1,5 @@
 from . import config, preprocess_file
-import pickle
+import numpy as np
 from .logger import set_logger
 
 
@@ -11,16 +11,27 @@ def main():
   '''
 
   try:
-    with open(config.DUMPS_DIR + config.PROCESSED_SAVE_NAME, "rb") as f:
-      set_logger.info("Dataset already exists. Attempting pickle load...")
-      pickle.load(f)
-      set_logger.info("Dataset pickle loaded")
+    with open(config.DUMPS_DIR + config.PROCESSED_SAVE_NAME + "_labels",
+              'rb') as f:
+      Y = np.load(f)
+    with open(config.DUMPS_DIR + config.PROCESSED_SAVE_NAME + "_features",
+              'rb') as f:
+      X = np.load(f)
+    set_logger.info("Dataset loaded")
 
   except (EOFError, OSError, IOError) as e:
     set_logger.info("No dataset yet. Creating and writing new dataset...")
-    with open(config.DUMPS_DIR + config.PROCESSED_SAVE_NAME, 'wb') as f:
-      pickle.dump(preprocess_file(config.DUMPS_DIR + config.RAW_SAVE_NAME), f)
-      set_logger.info("Dataset pickle loaded and dumped.")
+    X, Y = preprocess_file(config.DUMPS_DIR + config.RAW_SAVE_NAME)
+    set_logger.info("Dataset preprocessed.")
+
+    with open(config.DUMPS_DIR + config.PROCESSED_SAVE_NAME + "_labels",
+              'wb') as f:
+      np.save(f, Y)
+      set_logger.info("Labels dumped.")
+    with open(config.DUMPS_DIR + config.PROCESSED_SAVE_NAME + "_features",
+              'wb') as f:
+      np.save(f, X)
+      set_logger.info("Features dumped.")
 
   return None
 

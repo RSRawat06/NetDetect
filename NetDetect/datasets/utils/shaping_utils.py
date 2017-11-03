@@ -55,14 +55,14 @@ def segment_vector(vector, length):
     - vector (np.arr): input vector.
     - length (int): desired length.
   Returns:
-    - vector (np.arr): vector with proper length in dim 1.
+    - vector (list of np.arr): list of vectors.
   '''
 
-  if vector.shape[0] <= length:
+  if len(vector) <= length:
     return [fix_vector_length(vector, length)]
 
   cut_vectors = []
-  for i in range(0, vector.shape[0] + 1 - length):
+  for i in range(0, len(vector) + 1 - length):
     cut_vectors.append(vector[i:i + length])
 
   return cut_vectors

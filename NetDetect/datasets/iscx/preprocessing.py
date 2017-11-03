@@ -13,7 +13,8 @@ def preprocess_file(file_path):
   '''
 
   set_logger.info("Starting preprocessing...")
-  return label_data(*segment_histories(*separate_ips(*load_data(file_path))))
+  X, Y = label_data(*segment_histories(*separate_ips(*load_data(file_path))))
+  return np.array(X, dtype=np.float32), Y
 
 
 def identify_participants(row, headers_key):
@@ -49,8 +50,7 @@ def load_data(file_path):
         set_logger.debug("Headers key generated: " + str(headers_key))
         continue
 
-      set_logger.debug('Loading row: ' + str(i))
-      feature_vectors.append(shaping_utils.featurize_row(
+      feature_vectors.append(csv_utils.featurize_row(
           row, headers_key, config.numerical_fields))
       participating_ips.append(identify_participants(row, headers_key))
 
@@ -75,6 +75,7 @@ def separate_ips(feature_vectors, participating_ips):
   X = []
   ip_addresses = []
   encountered_ip_count = 0
+  encountered_features = 0
 
   # Maps a given IP address to its history's index in X.
   ip_history_map = {}
@@ -88,12 +89,14 @@ def separate_ips(feature_vectors, participating_ips):
         ip_addresses.append(ip)
         encountered_ip_count += 1
       X[ip_history_map[ip]].append(feature_vectors[i])
+      encountered_features += 1
 
   set_logger.debug("Separation by IP is complete.")
+  set_logger.debug(str(encountered_ip_count) + " IP addresses found.")
   set_logger.debug("Average history length for each ip: " +
-                   str(len(X) / encountered_ip_count))
+                   str(encountered_features / encountered_ip_count))
 
-  return X, ip_addresses
+  return np.array(X), ip_addresses
 
 
 def segment_histories(X, ip_addresses):
@@ -102,31 +105,35 @@ def segment_histories(X, ip_addresses):
 
   total_segment_counts = 0
   for i in range(X.shape[0]):
-    segments = shaping_utils.segment_vector(X[i], config.SEQ_LEN)
+    segments = shaping_utils.segment_vector(np.array(X[i]), config.SEQ_LEN)
     new_X += segments
-    new_ip_addresses += segments.shape[0] * [ip_addresses[i]]
+    new_ip_addresses += len(segments) * [ip_addresses[i]]
 
-    total_segment_counts += segments.shape[0]
+    total_segment_counts += len(segments)
 
   set_logger.debug("Average seg count: " +
                    str(total_segment_counts / len(new_X)))
 
+  del(X)
+  del(ip_addresses)
+
   set_logger.debug("History segmentation complete.")
-  return np.array(new_X, dtype=np.float32), new_ip_addresses
+  return new_X, new_ip_addresses
 
 
 def label_data(X, ip_addresses):
   '''
   Label data.
   Args:
-    - X (np.array).
+    - X (list of np.array).
     - ip_addresses (list of str).
   Returns:
-    - X (np.array): the original X from args.
+    - X (list of np.array): the original X from args.
     - Y (np.array): the new labels for dataset.
   '''
 
-  Y = np.full(X.shape[0], fill_value=-1, dtype=np.int32)
+  set_logger.debug("Labelling data!")
+  Y = np.full((len(X), 2), fill_value=-1, dtype=np.int32)
   for i, ip in enumerate(ip_addresses):
     Y[i] = shaping_utils.build_one_hot(
         1 if ip in config.malicious_ips else 0,
