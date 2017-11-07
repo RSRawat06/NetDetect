@@ -4,13 +4,7 @@ import tensorflow as tf
 
 class FlowModel(Base, SequenceLayers):
   '''
-  Model for predicting on flows.  Model-specific config requirements:
-    BATCH_SIZE
-    N_STEPS
-    N_FEATURES
-    N_CLASSES
-    ENCODED_DIM
-    LAYERS: h_gru, h_att
+  Model for predicting on flows.
   '''
 
   def __init__(self, sess, config, logger):
@@ -35,28 +29,37 @@ class FlowModel(Base, SequenceLayers):
         'n_steps': config.N_STEPS,
         'n_features': config.N_FEATURES,
         'h_gru': config.LAYERS['h_gru'],
-        # 'h_att': config.LAYERS['h_att'],
-        'h_dense': config.ENCODED_DIM
+        'h_dense': config.LAYERS['o_gru']
     }
-    encoded_state, encoded_seq = self._encoder_layer(
+    encoded_state = self._encoder_layer(
         self.x, "encoder", encoder_config)
+
+    dense_config = {
+        'n_batches': config.BATCH_SIZE,
+        'n_input': config.LAYERS['o_gru'],
+        'n_hidden': config.LAYERS['h_dense'],
+        'n_output': config.LAYERS['o_dense']
+    }
+    dense_state = self._dense_layer(
+        encoded_state, "dense", dense_config)
 
     predictor_config = {
         'n_batches': config.BATCH_SIZE,
-        'n_input': config.ENCODED_DIM,
+        'n_input': config.LAYERS['o_dense'],
         'n_classes': config.N_CLASSES
     }
     self.prediction = self._prediction_layer(
-        encoded_state,
+        dense_state,
         'predictor',
         predictor_config)
 
-    self.loss, self.acc = self._define_optimization_vars(
+    self.loss = self._define_optimization_vars(
         self.target,
         self.prediction,
-        [1, 15]
+        [1, 1.1],
+        self.config.REGULARIZATION
     )
-    self.tpr, self.fpr = self._define_binary_metrics(
+    self.tpr, self.fpr, self.acc = self._define_binary_metrics(
         self.target,
         self.prediction,
     )

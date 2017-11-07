@@ -85,7 +85,6 @@ def partition_dataset(X, Y, n_test, n_val):
   '''
 
   # X, Y partitioned as: [train, test, val]
-
   n_train = X.shape[0] - n_test - n_val
 
   train_X = X[:n_train]
@@ -116,6 +115,11 @@ def shuffle_twins(X, Y):
   '''
 
   assert(X.shape[0] == Y.shape[0])
-  p = np.random.permutation(X.shape[0])
-  return X[p], Y[p]
+
+  rng_state = np.random.get_state()
+  np.random.shuffle(X)
+  np.random.set_state(rng_state)
+  np.random.shuffle(Y)
+
+  return X, Y
 

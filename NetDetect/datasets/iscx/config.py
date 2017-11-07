@@ -10,7 +10,7 @@ DUMPS_DIR = os.path.dirname(os.path.realpath(__file__)) + "/dumps/"
 RAW_SAVE_NAME = "raw_dataset.csv"
 PROCESSED_SAVE_NAME = "processed_dataset.p"
 
-SEQ_LEN = 20
+SEQ_LEN = 8
 
 numerical_fields = [
     "Flow_Duration", "Total_Fwd_Packets", "Total_Backward_Packets",

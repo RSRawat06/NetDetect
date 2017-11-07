@@ -31,7 +31,7 @@ class StandardLayers():
 
       return prediction
 
-  def _define_optimization_vars(self, target, prediction, result_weights=None):
+  def _define_optimization_vars(self, target, prediction, result_weights, regularization):
     '''
     Defines loss, optim, and various metrics to tarck training progress.
     Args:
@@ -39,6 +39,7 @@ class StandardLayers():
       - prediction - predictions of shape (batch, classes).
       - result_weights - array indicating how much to weight loss for each
                          class, ex: [1, 5].
+      - regularization (float) - l2 regularization constant.
     Return:
       - loss (tf.float32): regularized loss for pred/target.
       - acc (tf.float32): decimal accuracy.
@@ -48,9 +49,9 @@ class StandardLayers():
       regularization = tf.add_n([
           tf.nn.l2_loss(v) for v in tf.trainable_variables()
           if 'bias' not in v.name.lower()
-      ]) * tf.constant(0.01, dtype=tf.float32)
+      ]) * tf.constant(regularization, dtype=tf.float32)
 
-      delta = tf.constant(0.000001, dtype=tf.float32)
+      delta = tf.constant(0.01, dtype=tf.float32)
       if result_weights is None:
         loss = regularization - tf.reduce_sum(
             target * tf.log(prediction + delta), name="loss"
@@ -62,10 +63,7 @@ class StandardLayers():
             name="loss"
         )
 
-      correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(target, 1))
-      acc = tf.reduce_mean(tf.cast(correct, tf.float32), name="accuracy")
-
-      return loss, acc
+      return loss
 
   def _define_binary_metrics(self, target, prediction):
     '''
@@ -132,7 +130,10 @@ class StandardLayers():
           name="false_positive_rate"
       )
 
-      return tpr, fpr
+      correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(target, 1))
+      acc = tf.reduce_mean(tf.cast(correct, tf.float32), name="accuracy")
+
+      return tpr, fpr, acc
 
   def _instant_summaries(self, binary=False):
     '''

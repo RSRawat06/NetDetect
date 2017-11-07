@@ -35,7 +35,6 @@ class SequenceLayers():
                                                            bwd_gru,
                                                            X_unstacked,
                                                            dtype=tf.float32)
-      H = tf.transpose(H_inv, (1, 0, 2), name="H")
       O = tf.concat((O_fwd, O_bwd), axis=1, name="O")
 
       W = tf.get_variable("W", dtype=tf.float32,
@@ -44,7 +43,7 @@ class SequenceLayers():
       A = tf.tanh(tf.matmul(O, W) + b, name="A")
       assert(A.shape == (config['n_batches'], config['h_dense']))
 
-      return A, H
+      return A
 
   def _attention_encoder_layer(self, X, var_scope, config):
     '''
@@ -123,7 +122,7 @@ class SequenceLayers():
       A = tf.tanh(tf.matmul(M, W) + b, name="A")
       assert(A.shape == (config['n_batches'], config['h_dense']))
 
-      return A, H
+      return A
 
   def _dense_layer(self, X, var_scope, config):
     '''

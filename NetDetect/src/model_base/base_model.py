@@ -57,6 +57,7 @@ class Base(StandardLayers):
     except AttributeError:
       self.logger.debug('Saver not initiated, creating new model Saver.')
       self.tf_saver = tf.train.Saver(tf.global_variables())
+      return self.tf_saver
 
   def save(self, global_step):
     '''
@@ -96,15 +97,14 @@ class Base(StandardLayers):
       X (np.arr): featured data. Assuming len(X) > batch size.
       Y (np.arr): labels. Assuming len(Y) > batch size.
       report_func: function to call whenever reporting is triggered.
-                   takes one argument: sub_epoch (int).
+                   takes two arguments: sub_epoch (self, int).
     '''
 
     self.logger.info('Starting model training...')
 
     sub_epoch = 0
     for epoch in range(self.config.ITERATIONS):
-      batcher = self.yield_batch(X, Y)
-      for x_batch, y_batch in next(batcher):
+      for x_batch, y_batch in self.yield_batch(X, Y):
         feed_dict = {
             self.x: x_batch,
             self.target: y_batch
@@ -114,7 +114,7 @@ class Base(StandardLayers):
             feed_dict=feed_dict)
 
         if sub_epoch % self.config.REPORT_INTERVAL == 0:
-          report_func(sub_epoch)
+          report_func(self, sub_epoch)
 
         if sub_epoch % self.config.SAVE_INTERVAL == 0:
           self.save(self.global_step)
@@ -136,8 +136,7 @@ class Base(StandardLayers):
 
     self.logger.info('Starting model predictions...')
     predictions = []
-    batcher = self.yield_batch(X)
-    for x_batch in next(batcher):
+    for x_batch in self.yield_batch(X):
       feed_dict = {
           self.x: x_batch,
       }
@@ -155,13 +154,12 @@ class Base(StandardLayers):
       Prefix (str): prefix for summary tags.
     '''
 
-    batcher = self.yield_batch(X, Y)
     all_loss = []
     all_tpr = []
     all_fpr = []
     all_acc = []
 
-    for x_batch, y_batch in next(batcher):
+    for x_batch, y_batch in self.yield_batch(X, Y):
       feed_dict = {
           self.x: x_batch,
           self.target: y_batch
@@ -201,13 +199,20 @@ class Base(StandardLayers):
       Y (np.arr): optional second arr
     """
 
-    total_batches = X.shape[0] // self.config.BATCH_SIZE
-
-    for i in range(total_batches):
-      i = i * self.config.BATCH_SIZE
+    for i in range(0, X.shape[0] + 1 - self.config.BATCH_SIZE, self.config.BATCH_SIZE):
       if Y is not None:
         yield X[i:(i + self.config.BATCH_SIZE)], \
             Y[i:(i + self.config.BATCH_SIZE)]
       else:
         yield X[i:(i + self.config.BATCH_SIZE)]
+
+    # total_batches = X.shape[0] // self.config.BATCH_SIZE
+    # 
+    # for i in range(total_batches):
+    #   i = i * self.config.BATCH_SIZE
+    #   if Y is not None:
+    #     yield X[i:(i + self.config.BATCH_SIZE)], \
+    #         Y[i:(i + self.config.BATCH_SIZE)]
+    #   else:
+    #     yield X[i:(i + self.config.BATCH_SIZE)]
 
