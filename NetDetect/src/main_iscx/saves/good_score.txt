@@ -1,3 +1,4 @@
+
 import os
 
 
@@ -6,21 +7,16 @@ GRAPHS_TRAIN_DIR = SAVES_DIR + "graphs/train/"
 GRAPHS_TEST_DIR = SAVES_DIR + "graphs/test/"
 CHECKPOINTS_DIR = SAVES_DIR + "checkpoints/"
 
-BATCH_SIZE = 16
-TEST_SIZE = 3200
-VAL_SIZE = 0
-ITERATIONS = 10
+ITERATIONS = 5
+BATCH_SIZE = 10
 N_FEATURES = 77
-N_STEPS = 10
+N_STEPS = 8
 LAYERS = {
-    'h_gru': 64,
-    'o_gru': 32,
-    'h_dense': 32,
-    'o_dense': 16
+    'h_gru': 64
 }
+ENCODED_DIM = 32
 N_CLASSES = 2
-REGULARIZATION = 0.1
+REGULARIZATION = 0.001
 
 REPORT_INTERVAL = 100
 SAVE_INTERVAL = 300
-

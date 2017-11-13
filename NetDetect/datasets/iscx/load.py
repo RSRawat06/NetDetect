@@ -15,7 +15,7 @@ def load(n_test, n_val):
                 'rb') as f_y:
         set_logger.info("Dataset exists. Processing...")
         return shaping_utils.partition_dataset(
-            *shaping_utils.shuffle_twins(np.load(f_x), np.load(f_y)), 
+            *shaping_utils.shuffle_twins(np.array(np.load(f_x)), np.load(f_y)), 
             n_test, n_val)
 
   except (EOFError, OSError, IOError) as e:

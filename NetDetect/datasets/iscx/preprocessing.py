@@ -1,6 +1,7 @@
 from . import config
 from ..utils import csv_utils, shaping_utils, analysis_utils
 import numpy as np
+import random
 import csv
 from .logger import set_logger
 
@@ -13,8 +14,7 @@ def preprocess_file(file_path):
   '''
 
   set_logger.info("Starting preprocessing...")
-  X, Y = label_data(*segment_histories(*separate_ips(*load_data(file_path))))
-  return np.array(X, dtype=np.float32), Y
+  return segment_histories(*separate_ips(*load_data(file_path)))
 
 
 def identify_participants(row, headers_key):
@@ -29,6 +29,14 @@ def identify_participants(row, headers_key):
   return participants
 
 
+def parse_score(value):
+  if value == "BENIGN":
+    return 0
+  elif value == "BOTNET":
+    return 1
+  else:
+    raise ValueError
+
 def load_data(file_path):
   '''
   Load in a CSV and parse for data.
@@ -36,10 +44,12 @@ def load_data(file_path):
     - file_path (str): path to raw dataset file.
   Returns:
     - X: np.array([[0.3, 0.3...]...], dtype=float32)
+    - Y: np.array([0, 1.....], dtype=int16)
     - metadata: [{info:a, label:x}... (n_classes)]
   '''
 
-  feature_vectors = []
+  flat_X = []
+  flat_Y = []
   participating_ips = []
 
   with open(file_path, 'r') as f:
@@ -50,30 +60,35 @@ def load_data(file_path):
         set_logger.debug("Headers key generated: " + str(headers_key))
         continue
 
-      feature_vectors.append(csv_utils.featurize_row(
+      flat_X.append(csv_utils.featurize_row(
           row, headers_key, config.numerical_fields))
+      flat_Y.append(parse_score(csv_utils.featurize_row_singular(
+          row, headers_key, config.score_field)))
       participating_ips.append(identify_participants(row, headers_key))
 
   set_logger.debug("Basic data loading complete.")
 
-  return np.array(feature_vectors, dtype=np.float32), participating_ips
+  return (np.array(flat_X, dtype=np.float32),
+          np.array(flat_Y, dtype=np.uint16),
+          participating_ips)
 
 
-def separate_ips(feature_vectors, participating_ips):
+def separate_ips(flat_X, flat_Y, participating_ips):
   '''
   Segment feature_vectors into their IPs.
   Essentially creates array of feature vectors that
   a given IP was involved in for each IP.
   Args:
-    - feature_vectors (np.array)
+    - flat_X (np.array)
+    - flat_Y (np.array)
     - participating_ips (list(str))
   Returns:
     - X (np.array): array of feature vectors
-    - ip_addresses: corresponding IP addresses for entries in X
+    - Y (np.array): array of feature vectors
   '''
 
   X = []
-  ip_addresses = []
+  Y = []
   encountered_ip_count = 0
   encountered_features = 0
 
@@ -81,14 +96,15 @@ def separate_ips(feature_vectors, participating_ips):
   ip_history_map = {}
 
   set_logger.debug("Mapping history for each IP...")
-  for i in range(feature_vectors.shape[0]):
+  for i in range(flat_X.shape[0]):
     for ip in participating_ips[i]:
       if ip not in ip_history_map:
         ip_history_map[ip] = encountered_ip_count
         X.append([])
-        ip_addresses.append(ip)
+        Y.append([])
         encountered_ip_count += 1
-      X[ip_history_map[ip]].append(feature_vectors[i])
+      X[ip_history_map[ip]].append(flat_X[i])
+      Y[ip_history_map[ip]].append(flat_Y[i])
       encountered_features += 1
 
   set_logger.debug("Separation by IP is complete.")
@@ -96,54 +112,59 @@ def separate_ips(feature_vectors, participating_ips):
   set_logger.debug("Average history length for each ip: " +
                    str(encountered_features / encountered_ip_count))
 
-  return np.array(X), ip_addresses
+  return np.array(X), np.array(Y)
 
 
-def segment_histories(X, ip_addresses):
+def segment_histories(X, Y):
+  """
+  Segment histories into segments of uniform length.
+  If segment contains no malign, seuqnece is considered normal.
+  If more than 2, then we classify as malign.
+  Between 0 and 2 we ignore.
+  """
+
   new_X = []
-  new_ip_addresses = []
+  new_Y = []
 
   total_segment_counts = 0
   for i in range(X.shape[0]):
     segments = shaping_utils.segment_vector(np.array(X[i]), config.SEQ_LEN)
-    new_X += segments
-    new_ip_addresses += len(segments) * [ip_addresses[i]]
+    scores = shaping_utils.segment_vector(np.array(Y[i]), config.SEQ_LEN)
 
-    total_segment_counts += len(segments)
+    for i in range(len(segments)):
+      malignant = 0
+      for score in scores[i]:
+        if score == 1:
+          malignant += 1
 
+      # if (malignant == 1):
+      #   continue
+
+      # Reduce number of benign labels.
+      if (malignant == 0):
+        if bool(random.getrandbits(1)):
+          continue
+
+      new_X.append(segments[i])
+      new_Y.append(
+          shaping_utils.build_one_hot(
+              0 if (malignant == 0) else 1,
+              [0, 1]
+          )
+      )
+      total_segment_counts += 1
+
+  set_logger.debug("History segmentation complete.")
   set_logger.debug("Average seg count: " +
                    str(total_segment_counts / len(new_X)))
 
   del(X)
-  del(ip_addresses)
+  del(Y)
 
-  set_logger.debug("History segmentation complete.")
-  return new_X, new_ip_addresses
-
-
-def label_data(X, ip_addresses):
-  '''
-  Label data.
-  Args:
-    - X (list of np.array).
-    - ip_addresses (list of str).
-  Returns:
-    - X (list of np.array): the original X from args.
-    - Y (np.array): the new labels for dataset.
-  '''
-
-  set_logger.debug("Labelling data!")
-  Y = np.full((len(X), 2), fill_value=-1, dtype=np.int32)
-  for i, ip in enumerate(ip_addresses):
-    Y[i] = shaping_utils.build_one_hot(
-        1 if ip in config.malicious_ips else 0,
-        [0, 1]
-    )
-  set_logger.debug("Data labelled!")
-
-  class_counts = analysis_utils.count_classes(Y)
+  class_counts = analysis_utils.count_classes(new_Y)
   set_logger.debug("Class distribution is malignant: '" +
                    str(class_counts['1']) +
                    "', benign: '" + str(class_counts['0']) + "'.")
-  return X, Y
+
+  return new_X, new_Y
 

@@ -5,9 +5,8 @@ from .logger import set_logger
 
 def main():
   '''
-  Main function of this download module.
-  Attempts to load existing dataset and if fails, downloads raw dataset and
-  saves a preprocessed copy.
+  Attempts to load label and feature components of the dataset.
+  Triggers preprocessing of raw file if loading fails.
   '''
 
   try:
@@ -26,10 +25,13 @@ def main():
 
     with open(config.DUMPS_DIR + config.PROCESSED_SAVE_NAME + "_labels",
               'wb') as f:
-      np.save(f, Y)
+      np.save(f, np.array(Y))
       set_logger.info("Labels dumped.")
+
+    del(Y)
     with open(config.DUMPS_DIR + config.PROCESSED_SAVE_NAME + "_features",
               'wb') as f:
+      print("Saving")
       np.save(f, X)
       set_logger.info("Features dumped.")
 
