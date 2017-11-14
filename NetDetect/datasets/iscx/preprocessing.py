@@ -1,7 +1,6 @@
 from . import config
 from ..utils import csv_utils, shaping_utils, analysis_utils
 import numpy as np
-import random
 import csv
 from .logger import set_logger
 
@@ -36,6 +35,7 @@ def parse_score(value):
     return 1
   else:
     raise ValueError
+
 
 def load_data(file_path):
   '''
@@ -140,11 +140,6 @@ def segment_histories(X, Y):
       # if (malignant == 1):
       #   continue
 
-      # Reduce number of benign labels.
-      if (malignant == 0):
-        if bool(random.getrandbits(1)):
-          continue
-
       new_X.append(segments[i])
       new_Y.append(
           shaping_utils.build_one_hot(
@@ -152,11 +147,11 @@ def segment_histories(X, Y):
               [0, 1]
           )
       )
-      total_segment_counts += 1
+    total_segment_counts += 1
 
   set_logger.debug("History segmentation complete.")
   set_logger.debug("Average seg count: " +
-                   str(total_segment_counts / len(new_X)))
+                   str(len(new_X) / total_segment_counts))
 
   del(X)
   del(Y)

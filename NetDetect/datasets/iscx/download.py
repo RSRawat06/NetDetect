@@ -32,7 +32,7 @@ def main():
     with open(config.DUMPS_DIR + config.PROCESSED_SAVE_NAME + "_features",
               'wb') as f:
       print("Saving")
-      np.save(f, X)
+      np.save(f, np.array(X, dtype=np.float32))
       set_logger.info("Features dumped.")
 
   return None
