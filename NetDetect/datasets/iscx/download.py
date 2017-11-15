@@ -9,31 +9,41 @@ def main():
   Triggers preprocessing of raw file if loading fails.
   '''
 
-  try:
-    with open(config.DUMPS_DIR + config.PROCESSED_SAVE_NAME + "_labels",
-              'rb') as f:
-      Y = np.load(f)
-    with open(config.DUMPS_DIR + config.PROCESSED_SAVE_NAME + "_features",
-              'rb') as f:
-      X = np.load(f)
-    set_logger.info("Dataset loaded")
+  set_logger.info("Creating and writing new dataset...")
 
-  except (EOFError, OSError, IOError) as e:
-    set_logger.info("No dataset yet. Creating and writing new dataset...")
-    X, Y = preprocess_file(config.DUMPS_DIR + config.RAW_SAVE_NAME)
-    set_logger.info("Dataset preprocessed.")
+  train_X, train_Y = preprocess_file(config.DUMPS_DIR + config.RAW_TRAIN_NAME)
+  set_logger.info("Training dataset preprocessed.")
 
-    with open(config.DUMPS_DIR + config.PROCESSED_SAVE_NAME + "_labels",
-              'wb') as f:
-      np.save(f, np.array(Y))
-      set_logger.info("Labels dumped.")
+  with open(config.DUMPS_DIR + config.PROCESSED_TRAIN_NAME + "_features",
+            'wb') as f:
+    np.save(f, np.array(train_X, dtype=np.float32))
+    set_logger.info("Training features dumped.")
 
-    del(Y)
-    with open(config.DUMPS_DIR + config.PROCESSED_SAVE_NAME + "_features",
-              'wb') as f:
-      print("Saving")
-      np.save(f, np.array(X, dtype=np.float32))
-      set_logger.info("Features dumped.")
+  del(train_X)
+
+  with open(config.DUMPS_DIR + config.PROCESSED_TRAIN_NAME + "_labels",
+            'wb') as f:
+    np.save(f, np.array(train_Y))
+    set_logger.info("Training labels dumped.")
+
+  del(train_Y)
+
+  test_X, test_Y = preprocess_file(config.DUMPS_DIR + config.RAW_TEST_NAME)
+  set_logger.info("Testing dataset preprocessed.")
+
+  with open(config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_features",
+            'wb') as f:
+    np.save(f, np.array(test_X, dtype=np.float32))
+    set_logger.info("Testing features dumped.")
+
+  del(test_X)
+
+  with open(config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_labels",
+            'wb') as f:
+    np.save(f, np.array(test_Y))
+    set_logger.info("Testing labels dumped.")
+
+  del(test_Y)
 
   return None
 
@@ -41,3 +51,4 @@ def main():
 if __name__ == "__main__":
   set_logger.info("Beginning dataset download")
   main()
+
