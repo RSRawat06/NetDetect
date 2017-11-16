@@ -46,22 +46,17 @@ class StandardLayers():
     '''
 
     with tf.variable_scope('optimization'):
-      regularization = tf.add_n([
+      regularization_loss = tf.add_n([
           tf.nn.l2_loss(v) for v in tf.trainable_variables()
           if 'bias' not in v.name.lower()
       ]) * tf.constant(regularization, dtype=tf.float32)
 
-      delta = tf.constant(0.01, dtype=tf.float32)
-      if result_weights is None:
-        loss = regularization - tf.reduce_sum(
-            target * tf.log(prediction + delta), name="loss"
-        )
-      else:
-        loss = regularization - tf.reduce_sum(
-            target * tf.log(prediction + delta) *
-            tf.constant(result_weights, dtype=tf.float32),
-            name="loss"
-        )
+      # Ignoring reg for test
+      loss = regularization_loss - tf.reduce_sum(
+          target * tf.log(prediction + 1e-10) *
+          tf.constant(result_weights, dtype=tf.float32),
+          name="loss"
+      )
 
       return loss
 

@@ -113,10 +113,13 @@ class Base(StandardLayers):
             [self.optim, self.loss],
             feed_dict=feed_dict)
 
+        print("Loss: ", loss)
+
         if sub_epoch % self.config.REPORT_INTERVAL == 0:
+          print("REPORT!")
           report_func(self, sub_epoch)
 
-        if sub_epoch % self.config.SAVE_INTERVAL == 0:
+        if (sub_epoch - 1) % self.config.SAVE_INTERVAL == 0:
           self.save(self.global_step)
 
         sub_epoch += 1
@@ -170,6 +173,7 @@ class Base(StandardLayers):
           feed_dict=feed_dict)
       tpr = float(tpr)
       fpr = float(fpr)
+      # print("loss:", loss)
       all_loss.append(loss)
       all_tpr.append(tpr)
       all_fpr.append(fpr)
@@ -199,7 +203,8 @@ class Base(StandardLayers):
       Y (np.arr): optional second arr
     """
 
-    for i in range(0, X.shape[0] + 1 - self.config.BATCH_SIZE, self.config.BATCH_SIZE):
+    for i in range(0, X.shape[0] + 1 - self.config.BATCH_SIZE,
+                   self.config.BATCH_SIZE):
       if Y is not None:
         yield X[i:(i + self.config.BATCH_SIZE)], \
             Y[i:(i + self.config.BATCH_SIZE)]
@@ -207,7 +212,7 @@ class Base(StandardLayers):
         yield X[i:(i + self.config.BATCH_SIZE)]
 
     # total_batches = X.shape[0] // self.config.BATCH_SIZE
-    # 
+    #
     # for i in range(total_batches):
     #   i = i * self.config.BATCH_SIZE
     #   if Y is not None:
