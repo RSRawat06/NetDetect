@@ -6,21 +6,24 @@ GRAPHS_TRAIN_DIR = SAVES_DIR + "graphs/train/"
 GRAPHS_TEST_DIR = SAVES_DIR + "graphs/test/"
 CHECKPOINTS_DIR = SAVES_DIR + "checkpoints/"
 
-BATCH_SIZE = 16
-TEST_SIZE = 3200
-VAL_SIZE = 0
-ITERATIONS = 10
+BATCH_SIZE = 32
+TEST_SIZE = 4096
+# VAL_SIZE = 0
+ITERATIONS = 100
 N_FEATURES = 77
-N_STEPS = 10
+N_STEPS = 22
 LAYERS = {
     'h_gru': 64,
-    'o_gru': 32,
+    'h_att': 16,
+    'o_gru': 64,
     'h_dense': 32,
-    'o_dense': 16
+    'o_dense': 32,
+    'h_dense2': 32,
+    'o_dense2': 16
 }
 N_CLASSES = 2
 REGULARIZATION = 0.1
 
-REPORT_INTERVAL = 100
-SAVE_INTERVAL = 300
+REPORT_INTERVAL = 500
+SAVE_INTERVAL = 50000
 
