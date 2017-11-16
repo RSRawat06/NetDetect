@@ -2,13 +2,13 @@ from ..model_base import Base, SequenceLayers
 import tensorflow as tf
 
 
-class FlowModel(Base, SequenceLayers):
+class FlowAttModel(Base, SequenceLayers):
   '''
   Model for predicting on flows.
   '''
 
   def __init__(self, sess, config, logger):
-    logger.info('Instantiated flow model')
+    logger.info('Instantiated flow att model')
     Base.__init__(self, sess, config, logger)
 
   def build_model(self):
@@ -29,9 +29,10 @@ class FlowModel(Base, SequenceLayers):
         'n_steps': config.N_STEPS,
         'n_features': config.N_FEATURES,
         'h_gru': config.LAYERS['h_gru'],
+        'h_att': config.LAYERS['h_att'],
         'h_dense': config.LAYERS['o_gru']
     }
-    encoded_state = self._encoder_layer(
+    encoded_state = self._attention_encoder_layer(
         self.x, "encoder", encoder_config)
 
     dense_config = {
@@ -43,13 +44,22 @@ class FlowModel(Base, SequenceLayers):
     dense_state = self._dense_layer(
         encoded_state, "dense", dense_config)
 
-    predictor_config = {
+    double_dense_config = {
         'n_batches': config.BATCH_SIZE,
         'n_input': config.LAYERS['o_dense'],
+        'n_hidden': config.LAYERS['h_dense2'],
+        'n_output': config.LAYERS['o_dense2']
+    }
+    double_dense_state = self._dense_layer(
+        dense_state, "dense2", double_dense_config)
+
+    predictor_config = {
+        'n_batches': config.BATCH_SIZE,
+        'n_input': config.LAYERS['o_dense2'],
         'n_classes': config.N_CLASSES
     }
     self.prediction = self._prediction_layer(
-        dense_state,
+        double_dense_state,
         'predictor',
         predictor_config)
 
