@@ -113,10 +113,8 @@ class Base(StandardLayers):
             [self.optim, self.loss],
             feed_dict=feed_dict)
 
-        print("Loss: ", loss)
-
         if sub_epoch % self.config.REPORT_INTERVAL == 0:
-          print("REPORT!")
+          print("Train batch loss: ", loss)
           report_func(self, sub_epoch)
 
         if (sub_epoch - 1) % self.config.SAVE_INTERVAL == 0:

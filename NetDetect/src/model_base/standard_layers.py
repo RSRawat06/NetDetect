@@ -8,11 +8,11 @@ class StandardLayers():
 
   def _prediction_layer(self, X, var_scope, config):
     '''
-    Predicts end result.
+    Predicts end result
     Args:
-      X - input data of shape (batch, features).
-      var_scope - string name of tf variable scope.
-      config {
+      - X: input data of shape (batch, features)
+      - var_scope: string name of tf variable scope.
+      - config {
           'n_batches': number of batches,
           'n_input': number of input features,
           'n_classes': number of potential output classes
@@ -31,7 +31,8 @@ class StandardLayers():
 
       return prediction
 
-  def _define_optimization_vars(self, target, prediction, result_weights, regularization):
+  def _define_optimization_vars(self, target, prediction,
+                                result_weights, regularization):
     '''
     Defines loss, optim, and various metrics to tarck training progress.
     Args:
@@ -51,7 +52,6 @@ class StandardLayers():
           if 'bias' not in v.name.lower()
       ]) * tf.constant(regularization, dtype=tf.float32)
 
-      # Ignoring reg for test
       loss = regularization_loss - tf.reduce_sum(
           target * tf.log(prediction + 1e-10) *
           tf.constant(result_weights, dtype=tf.float32),
