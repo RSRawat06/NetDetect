@@ -32,10 +32,10 @@ def evaluate():
     model.initialize()
     model.restore()
 
-    loss, acc, tpr, fpr, summary = self.evaluate(
+    loss, acc, tpr, fpr, summary = model.evaluate(
         dataset[0], dataset[1], prefix="test")
     print("Loss:", loss)
-    self.logger.info(
+    eval_logger.info(
         "Test loss: %f, test accuracy: %f, \
          TPR: %s, FPR: %s" % (loss, acc, str(tpr), str(fpr)))
 
