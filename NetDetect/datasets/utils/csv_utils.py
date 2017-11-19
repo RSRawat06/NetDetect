@@ -42,14 +42,3 @@ def featurize_row(row, headers_key, numerical_fields):
 
   return np.array(feature_vector, dtype=np.float32)
 
-
-def featurize_row_singular(row, headers_key, field):
-  '''
-  Featurize a row into a real-valued vector.
-  '''
-
-  for i, value in enumerate(row):
-    if headers_key[i] == field:
-      return value
-  raise ValueError
-

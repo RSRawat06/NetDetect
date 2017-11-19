@@ -26,7 +26,8 @@ def load_data(file_path):
     - file_path (str): path to raw dataset file.
   Returns:
     - X: np.array([[0.3, 0.3...]...], dtype=float32)
-    - metadata: [{info:a, label:x}... (n_classes)]
+    - ips: [[ip1, ip2], [ip1, ip3], [ip1, ip2]...]
+           where ip is string of ip address.
   '''
 
   flat_X = []
@@ -35,11 +36,13 @@ def load_data(file_path):
   with open(file_path, 'r') as f:
     set_logger.debug("Opened dataset csv...")
     for i, row in enumerate(csv.reader(f)):
+      # We assume the first row is a header.
       if i == 0:
         headers_key = csv_utils.build_headers(row)
         set_logger.debug("Headers key generated: " + str(headers_key))
         continue
 
+      # We collect relevant features and corresponding IPs.
       flat_X.append(csv_utils.featurize_row(
           row, headers_key, config.numerical_fields))
       participating_ips.append(identify_participants(row, headers_key))
@@ -51,6 +54,11 @@ def load_data(file_path):
 
 
 def preprocess_features(X, ips):
+  '''
+  Scale the feature vectors using scikit preprocessing.
+  '''
+
+  assert(len(X.shape) == 2)  # Double check that X is 2d.
   X = preprocessing.maxabs_scale(X, copy=False)
   return X, ips
 
@@ -61,17 +69,16 @@ def separate_ips(flat_X, ips):
   Essentially creates array of feature vectors that
   a given IP was involved in for each IP.
   Args:
-    - flat_X (np.array)
-    - participating_ips (list(str))
+    - flat_X (np.array) - 2d feature vecs.
+    - ips (list(list(str)))
   Returns:
-    - X (np.array): array of feature vectors
-    - new_ips
+    - X (list of list of np.array): list of list of 1d feature vecs.
+    - new_ips (list of str): list of ips
   '''
 
   X = []
   new_ips = []
 
-  encountered_ip_count = 0
   encountered_features = 0
 
   # Maps a given IP address to its history's index in X.
@@ -81,19 +88,18 @@ def separate_ips(flat_X, ips):
   for i in range(flat_X.shape[0]):
     for ip in ips[i]:
       if ip not in ip_history_map:
-        ip_history_map[ip] = encountered_ip_count
+        ip_history_map[ip] = len(X)
         X.append([])
         new_ips.append(ip)
-        encountered_ip_count += 1
       X[ip_history_map[ip]].append(flat_X[i])
       encountered_features += 1
 
   set_logger.debug("Separation by IP is complete.")
-  set_logger.debug(str(encountered_ip_count) + " IP addresses found.")
+  set_logger.debug(str(len(X)) + " IP addresses found.")
   set_logger.debug("Average history length for each ip: " +
-                   str(encountered_features / encountered_ip_count))
+                   str(encountered_features / len(X)))
 
-  return np.array(X), np.array(new_ips)
+  return X, new_ips
 
 
 def segment_histories(X, ips):
@@ -101,6 +107,12 @@ def segment_histories(X, ips):
   Segment histories into segments of uniform length.
   If segment contains no malign, seuqnece is considered normal.
   Else, malignant.
+  Args:
+    - X (list of list of np.arr): list of list of feature vecs.
+    - ips (list of str)
+  Returns:
+    - new_X (3d np.arr)
+    - new_ips (list of str): list of list of ips.
   """
 
   new_X = []
@@ -115,18 +127,18 @@ def segment_histories(X, ips):
   set_logger.debug("Average seg count: " +
                    str(len(new_X) / len(X)))
 
-  return new_X, new_ips
+  return np.array(new_X, dtype=np.float32), new_ips
 
 
 def label_data(X, ips):
   '''
   Label data.
   Args:
-    - X (list of np.array).
+    - X (3d np.array).
     - ip_addresses (list of str).
   Returns:
-    - X (list of np.array): the original X from args.
-    - Y (np.array): the new labels for dataset.
+    - X (3d np.array): the original X from args.
+    - Y (2d np.array): the new labels for dataset.
   '''
 
   set_logger.debug("Labelling data!")

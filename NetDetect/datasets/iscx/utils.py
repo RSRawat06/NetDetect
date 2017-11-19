@@ -12,17 +12,3 @@ def identify_participants(row, headers_key):
       participants.append(str(value))
   return participants
 
-
-def parse_score(value):
-  '''
-  Parse score according to ISCX label
-  standards.
-  '''
-
-  if value == "BENIGN":
-    return 0
-  elif value == "BOTNET":
-    return 1
-  else:
-    raise ValueError
-
