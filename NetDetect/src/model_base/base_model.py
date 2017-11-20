@@ -2,46 +2,41 @@ import tensorflow as tf
 import numpy as np
 from .standard_layers import StandardLayers
 
-tf.logging.set_verbosity(tf.logging.ERROR)
-tf.set_random_seed(4)
-np.random.seed(4)
-
 
 class Base(StandardLayers):
   '''
   Base model featuring useful Tensorflow utilities.
   '''
 
-  def __init__(self, sess, config, logger):
+  def __init__(self, sess, flags, logger, global_step=0):
     '''
     Initiate base model.
     Args:
       - sess: tf.Session().
-      - config: module with model config.
+      - flags: flags with model config.
       - logger: custom logger handler.
     '''
 
     self.sess = sess
-    self.config = config
+    self.flags = flags
     self.logger = logger
     self.model_name = "default.model"
-    self.global_step = tf.Variable(0,
+    self.global_step = tf.Variable(global_step,
                                    dtype=tf.int32,
                                    trainable=False,
                                    name='global_step')
 
   def initialize(self):
     '''
-    Initializes model.
     Builds model -> starts summary writer -> global vars init.
     '''
 
     self.logger.debug('Initializing model...')
-
+    self.build_model()
     self.logger.debug('Model built. Initializing model writer...')
-    self.train_writer = tf.summary.FileWriter(self.config.GRAPHS_TRAIN_DIR,
+    self.train_writer = tf.summary.FileWriter(self.flags.graphs_train_dir,
                                               self.sess.graph)
-    self.test_writer = tf.summary.FileWriter(self.config.GRAPHS_TEST_DIR,
+    self.test_writer = tf.summary.FileWriter(self.flags.graphs_test_dir,
                                              self.sess.graph)
     self.logger.debug('Writer initialized. Initializing TF graph...')
     self.var_init = tf.global_variables_initializer()
@@ -66,7 +61,7 @@ class Base(StandardLayers):
 
     self.logger.debug('Saving model...')
     self.saver.save(self.sess,
-                    self.config.CHECKPOINTS_DIR + self.model_name,
+                    self.flags.checkpoints_dir + self.model_name,
                     global_step=self.global_step)
     self.logger.debug('Saved with global step.')
 
@@ -78,7 +73,7 @@ class Base(StandardLayers):
     '''
 
     self.logger.debug('Restoring model...')
-    ckpt = tf.train.latest_checkpoint(self.config.CHECKPOINTS_DIR)
+    ckpt = tf.train.latest_checkpoint(self.flags.checkpoints_dir)
     if ckpt:
       self.logger.debug('Model checkpoint found. Restoring...')
       self.saver.restore(self.sess, ckpt)
@@ -103,7 +98,7 @@ class Base(StandardLayers):
     self.logger.info('Starting model training...')
 
     sub_epoch = 0
-    for epoch in range(self.config.n_iterations):
+    for epoch in range(self.flags.n_iterations):
       for x_batch, y_batch in self.yield_batch(X, Y):
         feed_dict = {
             self.x: x_batch,
@@ -113,11 +108,11 @@ class Base(StandardLayers):
             [self.optim, self.loss],
             feed_dict=feed_dict)
 
-        if sub_epoch % self.config.s_report_interval == 0:
+        if sub_epoch % self.flags.s_report_interval == 0:
           print("Train batch loss: ", loss)
           report_func(self, sub_epoch)
 
-        if (sub_epoch - 1) % self.config.s_save_interval == 0:
+        if (sub_epoch - 1) % self.flags.s_save_interval == 0:
           self.save(self.global_step)
 
         sub_epoch += 1
@@ -201,11 +196,11 @@ class Base(StandardLayers):
       Y (np.arr): optional second arr
     """
 
-    for i in range(0, X.shape[0] + 1 - self.config.s_batch,
-                   self.config.s_batch):
+    for i in range(0, X.shape[0] + 1 - self.flags.s_batch,
+                   self.flags.s_batch):
       if Y is not None:
-        yield X[i:(i + self.config.s_batch)], \
-            Y[i:(i + self.config.s_batch)]
+        yield X[i:(i + self.flags.s_batch)], \
+            Y[i:(i + self.flags.s_batch)]
       else:
-        yield X[i:(i + self.config.s_batch)]
+        yield X[i:(i + self.flags.s_batch)]
 

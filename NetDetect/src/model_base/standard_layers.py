@@ -130,7 +130,7 @@ class StandardLayers():
 
       return tpr, fpr, acc
 
-  def _instant_summaries(self, binary=False):
+  def _instant_summaries(self):
     '''
     Define summaries for tensorboard use.
     '''
