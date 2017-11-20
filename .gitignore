@@ -25,3 +25,6 @@
 # Keep .gitkeep
 !**/.gitkeep
 
+# Private notes
+notes.txt
+
