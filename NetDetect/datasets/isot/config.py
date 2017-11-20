@@ -17,7 +17,7 @@ participant_fields = ['Source', 'Destination']
 numerical_fields = [
     'APL', 'AvgPktPerSec', 'IAT', 'NumForward', 'Protocol', 'BytesEx',
     'BitsPerSec', 'NumPackets', 'StdDevLen', 'SameLenPktRatio',
-    'FPL', 'Duration', 'NPEx', 'Score'
+    'FPL', 'Duration', 'NPEx'
 ]
 malicious_ips = [
     'bb:bb:bb:bb:bb:bb',
