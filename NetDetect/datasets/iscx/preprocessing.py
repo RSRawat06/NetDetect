@@ -1,22 +1,22 @@
 from ..utils import csv_utils, shaping_utils, analysis_utils
 from . import config
 import numpy as np
-from .utils import identify_participants
 import csv
 from .logger import set_logger
 from sklearn import preprocessing
 
 
-def preprocess_file(file_path):
+def preprocess_file(file_path, n_steps):
   '''
   Return preprocessed dataset from raw data file.
   Returns:
     - dataset (list): X (np.arr), Y (np.arr)
+    - n_steps (int)
   '''
 
   set_logger.info("Starting preprocessing...")
   return label_data(*segment_histories(*separate_ips(
-      *preprocess_features(*load_data(file_path)))))
+      *preprocess_features(*load_data(file_path))), n_steps))
 
 
 def load_data(file_path):
@@ -102,24 +102,16 @@ def separate_ips(flat_X, ips):
   return X, new_ips
 
 
-def segment_histories(X, ips):
+def segment_histories(X, ips, n_steps):
   """
   Segment histories into segments of uniform length.
-  If segment contains no malign, seuqnece is considered normal.
-  Else, malignant.
-  Args:
-    - X (list of list of np.arr): list of list of feature vecs.
-    - ips (list of str)
-  Returns:
-    - new_X (3d np.arr)
-    - new_ips (list of str): list of list of ips.
   """
 
   new_X = []
   new_ips = []
 
   for i in range(len(X)):
-    segments = shaping_utils.segment_vector(np.array(X[i]), config.SEQ_LEN)
+    segments = shaping_utils.segment_vector(np.array(X[i]), n_steps)
     new_X += segments
     new_ips += len(segments) * [ips[i]]
 
@@ -155,4 +147,16 @@ def label_data(X, ips):
                    str(class_counts['1']) +
                    "', benign: '" + str(class_counts['0']) + "'.")
   return np.array(X, dtype=np.float32), np.array(Y, dtype=np.uint8)
+
+
+def identify_participants(row, headers_key):
+  '''
+  Return participants for a given row.
+  '''
+
+  participants = []
+  for i, value in enumerate(row):
+    if headers_key[i] in config.participant_fields:
+      participants.append(str(value))
+  return participants
 

@@ -8,35 +8,53 @@ def load(test_size):
   '''
   Loads preprocessed data dump if possible.
   '''
+
   try:
-    # load test sets.
-    with open(config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_features",
+    #######################################
+    ### Testing dataset load.
+
+    # Load testing features
+    with open(config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_X",
               'rb') as f_x:
+      set_logger.info("Testing features exist. Processing...")
       full_test_X = np.load(f_x)
-    with open(config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_labels",
+    # Load testing labels
+    with open(config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_Y",
               'rb') as f_y:
+      set_logger.info("Testing labels exist. Processing...")
       full_test_Y = np.load(f_y)
-    # shuffle test
+
+    # Shuffle testing dataset
     full_test_X, full_test_Y = shaping_utils.shuffle_twins(full_test_X,
                                                            full_test_Y)
-    # cut test X
+    # Cut testing features
     test_X = full_test_X[:test_size]
     del(full_test_X)
-    # cut test Y
+    # Cut testing labels
     test_Y = full_test_Y[:test_size]
     del(full_test_Y)
 
-    # load train sets.
-    with open(config.DUMPS_DIR + config.PROCESSED_TRAIN_NAME + "_features",
+    #######################################
+
+
+    #######################################
+    ### Training dataset load.
+
+    # Load training features
+    with open(config.DUMPS_DIR + config.PROCESSED_TRAIN_NAME + "_X",
               'rb') as f_x:
+      set_logger.info("Training features exist. Processing...")
       train_X = np.load(f_x)
-    with open(config.DUMPS_DIR + config.PROCESSED_TRAIN_NAME + "_labels",
+    # Load training labels
+    with open(config.DUMPS_DIR + config.PROCESSED_TRAIN_NAME + "_Y",
               'rb') as f_y:
+      set_logger.info("Training labels exist. Processing...")
       train_Y = np.load(f_y)
-    # shuffle train
+    # Shuffle training dataset
     train_X, train_Y = shaping_utils.shuffle_twins(train_X, train_Y)
 
-    set_logger.info("Dataset exists. Processing...")
+    #######################################
+
     return (train_X, train_Y), (test_X, test_Y)
 
   except (EOFError, OSError, IOError) as e:
@@ -48,13 +66,20 @@ def load_full_test():
   '''
   Loads preprocessed data dump for test if possible.
   '''
+
   try:
-    with open(config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_features",
+    # Load testing features
+    with open(config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_X",
               'rb') as f_x:
+      set_logger.info("Testing features exist. Processing...")
       full_test_X = np.load(f_x)
-    with open(config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_labels",
+    # Load testing labels
+    with open(config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_Y",
               'rb') as f_y:
+      set_logger.info("Testing labels exist. Processing...")
       full_test_Y = np.load(f_y)
+
+    # Shuffle testing dataset
     full_test_X, full_test_Y = shaping_utils.shuffle_twins(full_test_X,
                                                            full_test_Y)
 

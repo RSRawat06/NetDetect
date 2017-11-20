@@ -1,120 +1,167 @@
-import csv
-import numpy as np
+from ..utils import csv_utils, shaping_utils, analysis_utils
 from . import config
+import numpy as np
+import csv
 from .logger import set_logger
+from sklearn import preprocessing
 
 
-def preprocess_file(file_path, n_points_cap=None):
-  set_logger.info("Initiating data loading")
+def preprocess_file(file_path, n_steps):
+  '''
+  Return preprocessed dataset from raw data file.
+  Returns:
+    - dataset (list): X (np.arr), Y (np.arr)
+    - n_steps (int)
+  '''
 
-  fields_key = {}
-  unfields_key = {}
+  set_logger.info("Starting preprocessing...")
+  return partition(*label_data(*segment_histories(*separate_ips(
+      *preprocess_features(*load_data(file_path))), n_steps)))
 
-  points = []
-  targets = []
-  key = []
 
-  i = 0
+def load_data(file_path):
+  '''
+  Load in a CSV and parse for data.
+  Args:
+    - file_path (str): path to raw dataset file.
+  Returns:
+    - X: np.array([[0.3, 0.3...]...], dtype=float32)
+    - ips: [[ip1, ip2], [ip1, ip3], [ip1, ip2]...]
+           where ip is string of ip address.
+  '''
+
+  flat_X = []
+  participating_ips = []
 
   with open(file_path, 'r') as f:
-    first_row = True
-    for row in csv.reader(f):
-      # If first row, use it to generate header rows dict
-      if first_row:
-        j = 0
-        for field in row:
-          if field in config.DESIRED_FIELDS:
-            fields_key[field] = j
-          if field in config.UNDESIRED_FIELDS:
-            unfields_key[field] = j
-          j += 1
-        for field in config.DESIRED_FIELDS:
-          assert(field in fields_key)
-        first_row = False
-        set_logger.info("Header correlation complete")
+    set_logger.debug("Opened dataset csv...")
+    for i, row in enumerate(csv.reader(f)):
+      # We assume the first row is a header.
+      if i == 0:
+        headers_key = csv_utils.build_headers(row)
+        set_logger.debug("Headers key generated: " + str(headers_key))
         continue
 
-      # Terminate if reached points cap
-      if n_points_cap:
-        if (n_points_cap > i):
-          set_logger.info("Points cap reached. Data loading terminated.")
-          break
-      i += 1
+      # We collect relevant features and corresponding IPs.
+      flat_X.append(csv_utils.featurize_row(
+          row, headers_key, config.numerical_fields))
+      participating_ips.append(identify_participants(row, headers_key))
 
-      # Process row
-      point, target = score_extraction(row, fields_key)
+  set_logger.debug("Basic data loading complete.")
 
-      points.append(point)
-      targets.append(target)
-      key.append((row[unfields_key['Source']],
-                  row[unfields_key['Destination']]))
-
-  set_logger.info("All rows processed")
-  X, Y = sequentialify(points, targets, key)
-  set_logger.info("Sequentialifed")
-
-  return X, Y
+  return np.array(flat_X, dtype=np.float32), \
+      participating_ips
 
 
-def score_extraction(row, fields_key):
-  point = np.empty(len(fields_key) - 1, dtype=np.float32)
-  i = 0
-  for field, index_ in fields_key.items():
-    if field == "Score":
-      if row[index_] == "0":
-        target = [1, 0]
-      elif row[index_] == "1":
-        target = [0, 1]
-      else:
-        raise Exception
-      continue
-    point[i] = row[index_]
-    i += 1
-  return point, target
+def preprocess_features(X, ips):
+  '''
+  Scale the feature vectors using scikit preprocessing.
+  '''
+
+  assert(len(X.shape) == 2)  # Double check that X is 2d.
+  X = preprocessing.maxabs_scale(X, copy=False)
+  return X, ips
 
 
-def sequentialify(data, targets, supp_data):
-  set_logger.info("Initiating sequentificalication")
+def separate_ips(flat_X, ips):
+  '''
+  Segment feature_vectors into their IPs.
+  Essentially creates array of feature vectors that
+  a given IP was involved in for each IP.
+  Args:
+    - flat_X (np.array) - 2d feature vecs.
+    - ips (list(list(str)))
+  Returns:
+    - X (list of list of np.array): list of list of 1d feature vecs.
+    - new_ips (list of str): list of ips
+  '''
 
-  sequence_match = []
-  sequence_match_key = {}
+  X = []
+  new_ips = []
 
-  # Assign to streams
-  for i, point in enumerate(data):
+  encountered_features = 0
 
-    # Handle src
-    if (supp_data[i][0] in sequence_match_key):
-      sequence_match[sequence_match_key[
-          supp_data[i][0]]]['approved'].append(point)
-    else:
-      sequence_match_key[supp_data[i][0]] = len(sequence_match)
-      sequence_match.append({'approved': [point], 'score': targets[i]})
+  # Maps a given IP address to its history's index in X.
+  ip_history_map = {}
 
-    # Handle dest
-    if (supp_data[i][1] in sequence_match_key):
-      sequence_match[sequence_match_key[
-          supp_data[i][1]]]['approved'].append(point)
-    else:
-      sequence_match_key[supp_data[i][1]] = len(sequence_match)
-      sequence_match.append({'approved': [point], 'score': targets[i]})
+  set_logger.debug("Mapping history for each IP...")
+  for i in range(flat_X.shape[0]):
+    for ip in ips[i]:
+      if ip not in ip_history_map:
+        ip_history_map[ip] = len(X)
+        X.append([])
+        new_ips.append(ip)
+      X[ip_history_map[ip]].append(flat_X[i])
+      encountered_features += 1
 
-  del(data)
-  del(targets)
-  del(supp_data)
+  set_logger.debug("Separation by IP is complete.")
+  set_logger.debug(str(len(X)) + " IP addresses found.")
+  set_logger.debug("Average history length for each ip: " +
+                   str(encountered_features / len(X)))
 
-  seq_points = []
-  seq_targets = []
-  len_training = 0
+  return X, new_ips
 
-  # Segment into chunks of uniform length
-  for usr, seq_id in sequence_match_key.items():
-    info = sequence_match[seq_id]
-    for i in range(0, len(info['approved']) - config.MAX_SEQUENCE_LENGTH):
-      seq_points.append(info['approved'][i:i + config.MAX_SEQUENCE_LENGTH])
-      seq_targets.append(info['score'])
-      len_training += 1
 
-  set_logger.info("Sequentification complete")
+def segment_histories(X, ips, n_steps):
+  """
+  Segment histories into segments of uniform length.
+  """
 
-  return seq_points, seq_targets
+  new_X = []
+  new_ips = []
+
+  for i in range(len(X)):
+    segments = shaping_utils.segment_vector(np.array(X[i]), n_steps)
+    new_X += segments
+    new_ips += len(segments) * [ips[i]]
+
+  set_logger.debug("History segmentation complete.")
+  set_logger.debug("Average seg count: " +
+                   str(len(new_X) / len(X)))
+
+  return np.array(new_X, dtype=np.float32), new_ips
+
+
+def label_data(X, ips):
+  '''
+  Label data.
+  Args:
+    - X (3d np.array).
+    - ip_addresses (list of str).
+  Returns:
+    - X (3d np.array): the original X from args.
+    - Y (2d np.array): the new labels for dataset.
+  '''
+
+  set_logger.debug("Labelling data!")
+  Y = np.full((len(X), 2), fill_value=-1, dtype=np.int32)
+  for i, ip in enumerate(ips):
+    Y[i] = shaping_utils.build_one_hot(
+        1 if ip.lower() in config.malicious_ips else 0,
+        [0, 1]
+    )
+  set_logger.debug("Data labelled!")
+
+  class_counts = analysis_utils.count_classes(Y)
+  set_logger.debug("Class distribution is malignant: '" +
+                   str(class_counts['1']) +
+                   "', benign: '" + str(class_counts['0']) + "'.")
+  return np.array(X, dtype=np.float32), np.array(Y, dtype=np.uint8)
+
+
+def partition(X, Y):
+  return (X[config.test_size:], Y[config.test_size:]), \
+         (X[:config.test_size], Y[:config.test_size])
+
+
+def identify_participants(row, headers_key):
+  '''
+  Return participants for a given row.
+  '''
+
+  participants = []
+  for i, value in enumerate(row):
+    if headers_key[i] in config.participant_fields:
+      participants.append(str(value))
+  return participants
 

@@ -7,14 +7,22 @@ import os
 
 DUMPS_DIR = os.path.dirname(os.path.realpath(__file__)) + "/dumps/"
 
-RAW_SAVE_NAME = "isot_full.csv"
-PROCESSED_SAVE_NAME = "processed_dataset.p"
+RAW_NAME = "isot_full.csv"
 
-MAX_SEQUENCE_LENGTH = 5
+PROCESSED_NAME = "processed_dataset.p"
 
-DESIRED_FIELDS = [
+DATASET_URL = ""
+
+participant_fields = ['Source', 'Destination']
+numerical_fields = [
     'APL', 'AvgPktPerSec', 'IAT', 'NumForward', 'Protocol', 'BytesEx',
     'BitsPerSec', 'NumPackets', 'StdDevLen', 'SameLenPktRatio',
     'FPL', 'Duration', 'NPEx', 'Score'
 ]
-UNDESIRED_FIELDS = ['Source', 'Destination']
+malicious_ips = [
+    'bb:bb:bb:bb:bb:bb',
+    'aa:aa:aa:aa:aa:aa',
+    'cc:cc:cc:cc:cc:cc',
+    'cc:cc:cc:dd:dd:dd'
+]
+

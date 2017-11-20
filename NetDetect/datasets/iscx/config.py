@@ -18,8 +18,7 @@ TRAIN_LABELS_URL = ""
 TEST_FEATURES_URL = ""
 TEST_LABELS_URL = ""
 
-SEQ_LEN = 22
-
+participant_fields = ["Source_IP", "Destination_IP"]
 numerical_fields = [
     "Flow_Duration", "Total_Fwd_Packets", "Total_Backward_Packets",
     "Total_Length_of_Fwd_Packets", "Total_Length_of_Bwd_Packets",
@@ -45,11 +44,6 @@ numerical_fields = [
     "Active_Mean", "Active_Std", "Active_Max", "Active_Min", "Idle_Mean",
     "Idle_Std", "Idle_Max", "Idle_Min"
 ]
-
-score_field = "Label"
-seq_field = "Flow_ID"
-participant_fields = ["Source_IP", "Destination_IP"]
-
 malicious_ips = [
     "192.168.2.112", "131.202.243.84", "192.168.5.122", "198.164.30.2",
     "192.168.2.110", "192.168.5.122", "192.168.4.118", "192.168.5.122",
