@@ -1,5 +1,5 @@
 from ...src.models import FlowAttModel, FlowModel
-from ...datasets.iscx import load_full_test
+from ...datasets.isot import load_full_test
 from .logger import eval_logger
 import tensorflow as tf
 
@@ -13,24 +13,24 @@ tf.app.flags.DEFINE_integer("s_batch", 32,
 tf.app.flags.DEFINE_float("v_regularization", 0.15,
                           "Value of regularization term")
 
-tf.app.flags.DEFINE_integer("n_features", 77,
+tf.app.flags.DEFINE_integer("n_features", 13,
                             "Number of features")
 tf.app.flags.DEFINE_integer("n_steps", 22,
                             "Number of steps in input sequence")
 
-tf.app.flags.DEFINE_integer("h_gru", 64,
+tf.app.flags.DEFINE_integer("h_gru", 16,
                             "Hidden units in GRU layer")
-tf.app.flags.DEFINE_integer("h_att", 16,
+tf.app.flags.DEFINE_integer("h_att", 8,
                             "Hidden units in attention mechanism")
-tf.app.flags.DEFINE_integer("o_gru", 64,
+tf.app.flags.DEFINE_integer("o_gru", 16,
                             "Output units in GRU layer")
-tf.app.flags.DEFINE_integer("h_dense", 64,
+tf.app.flags.DEFINE_integer("h_dense", 8,
                             "Hidden units in first dense layer")
-tf.app.flags.DEFINE_integer("o_dense", 32,
+tf.app.flags.DEFINE_integer("o_dense", 8,
                             "Output units in first dense layer")
-tf.app.flags.DEFINE_integer("h_dense2", 32,
+tf.app.flags.DEFINE_integer("h_dense2", 8,
                             "Hidden units in second dense layer")
-tf.app.flags.DEFINE_integer("o_dense2", 16,
+tf.app.flags.DEFINE_integer("o_dense2", 8,
                             "Output units in second dense layer")
 tf.app.flags.DEFINE_integer("n_classes", 2,
                             "Number of label classes")
