@@ -118,7 +118,7 @@ def segment_histories(X, ips):
   new_X = []
   new_ips = []
 
-  for i in range(X.shape[0]):
+  for i in range(len(X)):
     segments = shaping_utils.segment_vector(np.array(X[i]), config.SEQ_LEN)
     new_X += segments
     new_ips += len(segments) * [ips[i]]

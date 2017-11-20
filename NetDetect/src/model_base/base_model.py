@@ -103,7 +103,7 @@ class Base(StandardLayers):
     self.logger.info('Starting model training...')
 
     sub_epoch = 0
-    for epoch in range(self.config.ITERATIONS):
+    for epoch in range(self.config.n_iterations):
       for x_batch, y_batch in self.yield_batch(X, Y):
         feed_dict = {
             self.x: x_batch,
@@ -113,11 +113,11 @@ class Base(StandardLayers):
             [self.optim, self.loss],
             feed_dict=feed_dict)
 
-        if sub_epoch % self.config.REPORT_INTERVAL == 0:
+        if sub_epoch % self.config.s_report_interval == 0:
           print("Train batch loss: ", loss)
           report_func(self, sub_epoch)
 
-        if (sub_epoch - 1) % self.config.SAVE_INTERVAL == 0:
+        if (sub_epoch - 1) % self.config.s_save_interval == 0:
           self.save(self.global_step)
 
         sub_epoch += 1
@@ -201,21 +201,11 @@ class Base(StandardLayers):
       Y (np.arr): optional second arr
     """
 
-    for i in range(0, X.shape[0] + 1 - self.config.BATCH_SIZE,
-                   self.config.BATCH_SIZE):
+    for i in range(0, X.shape[0] + 1 - self.config.s_batch,
+                   self.config.s_batch):
       if Y is not None:
-        yield X[i:(i + self.config.BATCH_SIZE)], \
-            Y[i:(i + self.config.BATCH_SIZE)]
+        yield X[i:(i + self.config.s_batch)], \
+            Y[i:(i + self.config.s_batch)]
       else:
-        yield X[i:(i + self.config.BATCH_SIZE)]
-
-    # total_batches = X.shape[0] // self.config.BATCH_SIZE
-    #
-    # for i in range(total_batches):
-    #   i = i * self.config.BATCH_SIZE
-    #   if Y is not None:
-    #     yield X[i:(i + self.config.BATCH_SIZE)], \
-    #         Y[i:(i + self.config.BATCH_SIZE)]
-    #   else:
-    #     yield X[i:(i + self.config.BATCH_SIZE)]
+        yield X[i:(i + self.config.s_batch)]
 
