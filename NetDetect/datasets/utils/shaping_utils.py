@@ -68,40 +68,6 @@ def segment_vector(vector, length):
   return cut_vectors
 
 
-def partition_dataset(X, Y, n_test, n_val):
-  '''
-  Partition a dataset into train, test, validation
-  splits.
-  Args:
-    - X (np.array)
-    - Y (np.array)
-    - n_test (int): number of test points
-    - n_val (int): number of validation points
-  Return:
-    - result:
-      {"train": {"X": np.arr, "Y": np.arr},
-      "test": {"X": np.arr, "Y": np.arr},
-      "val": {"X": np.arr, "Y": np.arr}}.
-  '''
-
-  # X, Y partitioned as: [train, test, val]
-  n_train = X.shape[0] - n_test - n_val
-
-  train_X = X[:n_train]
-  test_X = X[n_train:(n_train + n_test)]
-  val_X = X[(n_train + n_test):]
-  del(X)
-
-  train_Y = Y[:n_train]
-  test_Y = Y[n_train:(n_train + n_test)]
-  val_Y = Y[(n_train + n_test):]
-  del(Y)
-
-  return {"train": {"X": train_X, "Y": train_Y},
-          "test": {"X": test_X, "Y": test_Y},
-          "val": {"X": val_X, "Y": val_Y}}
-
-
 def shuffle_twins(X, Y):
   '''
   Shuffle two np.arrays in parallel.

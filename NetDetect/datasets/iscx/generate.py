@@ -66,7 +66,7 @@ def main(n_steps):
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
-  parser.add_argument("-steps", "--steps", help="Steps in sequence", type=int)
+  parser.add_argument("-steps", "--steps", help="Steps in sequence", type=int, required=True)
 
   main(n_steps=parser.parse_args().steps)
 

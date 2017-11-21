@@ -8,12 +8,10 @@ import os
 DUMPS_DIR = os.path.dirname(os.path.realpath(__file__)) + "/dumps/"
 
 RAW_NAME = "isot_full.csv"
-
 PROCESSED_NAME = "processed_dataset.p"
-
 DATASET_URL = ""
 
-participant_fields = ['Source', 'Destination']
+participant_fields = ['Eth_val']
 numerical_fields = [
     'APL', 'AvgPktPerSec', 'IAT', 'NumForward', 'Protocol', 'BytesEx',
     'BitsPerSec', 'NumPackets', 'StdDevLen', 'SameLenPktRatio',
@@ -23,6 +21,6 @@ malicious_ips = [
     'bb:bb:bb:bb:bb:bb',
     'aa:aa:aa:aa:aa:aa',
     'cc:cc:cc:cc:cc:cc',
-    'cc:cc:cc:dd:dd:dd'
+    'cc:cc:cc:dd:dd:dd',
 ]
 

@@ -10,32 +10,25 @@ def load(test_size):
   '''
 
   try:
+    #######################################
+    ### Dataset load.
+
     with open(config.DUMPS_DIR + config.PROCESSED_NAME, "rb") as f:
       set_logger.info("Dataset exists. Processing...")
-      training_dataset, testing_dataset = pickle.load(f)
+      X, Y = pickle.load(f)
 
-    #######################################
-    ### Testing dataset load.
-
-    # Shuffle testing dataset
-    full_test_X, full_test_Y = shaping_utils.shuffle_twins(testing_dataset)
-    del(testing_dataset)
+    # Shuffle dataset
+    X, Y = shaping_utils.shuffle_twins((X, Y))
 
     # Cut testing features
-    test_X = full_test_X[:test_size]
-    del(full_test_X)
+    test_X = X[:test_size]
+    train_X = X[test_size:]
+    del(X)
+
     # Cut testing labels
-    test_Y = full_test_Y[:test_size]
-    del(full_test_Y)
-
-    #######################################
-
-
-    #######################################
-    ### Training dataset load.
-
-    train_X, train_Y = shaping_utils.shuffle_twins(training_dataset)
-    del(training_dataset)
+    test_Y = Y[:test_size]
+    train_Y = Y[test_size:]
+    del(Y)
 
     #######################################
 
@@ -54,14 +47,9 @@ def load_full_test():
   try:
     with open(config.DUMPS_DIR + config.PROCESSED_NAME, "rb") as f:
       set_logger.info("Dataset exists. Processing...")
-      training_dataset, testing_dataset = pickle.load(f)
-      del(training_dataset)
-
-    # Shuffle testing dataset
-    full_test_X, full_test_Y = shaping_utils.shuffle_twins(testing_dataset)
-    del(testing_dataset)
-
-    return full_test_X, full_test_Y
+      X, Y = pickle.load(f)
+    X, Y = shaping_utils.shuffle_twins((X, Y))
+    return X, Y
 
   except (EOFError, OSError, IOError) as e:
     set_logger.info("Dataset does not exist. Returning None.")

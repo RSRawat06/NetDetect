@@ -15,8 +15,8 @@ def preprocess_file(file_path, n_steps):
   '''
 
   set_logger.info("Starting preprocessing...")
-  return partition(*label_data(*segment_histories(*separate_ips(
-      *preprocess_features(*load_data(file_path))), n_steps)))
+  return label_data(*segment_histories(*separate_ips(
+      *preprocess_features(*load_data(file_path))), n_steps))
 
 
 def load_data(file_path):
@@ -147,11 +147,6 @@ def label_data(X, ips):
                    str(class_counts['1']) +
                    "', benign: '" + str(class_counts['0']) + "'.")
   return np.array(X, dtype=np.float32), np.array(Y, dtype=np.uint8)
-
-
-def partition(X, Y):
-  return (X[config.test_size:], Y[config.test_size:]), \
-         (X[:config.test_size], Y[:config.test_size])
 
 
 def identify_participants(row, headers_key):
