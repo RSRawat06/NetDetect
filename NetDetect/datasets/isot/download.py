@@ -11,6 +11,6 @@ if __name__ == "__main__":
                       type=int, required=True)
   n_steps = str(parser.parse_args().steps)
 
-  download_file("isot_" + n_steps,
+  download_file("datasets", "isot_" + n_steps,
                 config.DUMPS_DIR + "dataset_" + n_steps + ".p")
 
