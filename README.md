@@ -8,7 +8,7 @@ NetDetect applies recurrent neural networks to detect devices infected by botnet
 * Docker Compose version 1.14.0
 
 ### Getting Started
-To install, hop into Docker and install the necessary datasets.
+Start up all containers.
 ```
 docker-compose up --build
 ```
@@ -17,11 +17,8 @@ Now hop into Docker and download some files.
 ```
 cd NetDetect
 bash access_NetDetect.sh
-```
-
-Now you should be inside the NetDetect container.
-```
-service neo4j start
+python3 -m NetDetect.datasets.iscx.download --n_steps 24
+python3 -m NetDetect.datasets.isot.download --n_steps 24
 ```
 
 Now run unit tests to make sure everything builds ok.
@@ -30,12 +27,14 @@ py.test NetDetect/tests
 ```
 
 ### Usage:
-Let's get botnet detection training up and running.
+Let's get training started.
+
+To start training on ISCX:
 ```
-python3 -m NetDetect.datasets.iscx.download
-python3 -m NetDetect.src.main_iscx.train
+python3 -m NetDetect.src.main_iscx.train --n_steps=24
 ```
-In a seperate window, simultaneously, run:
+
+To start Tensorboard
 ```
 cd /NetDetect/src/main_iscx
 bash run_tensorboard.sh

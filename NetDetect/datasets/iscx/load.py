@@ -4,7 +4,7 @@ from ..utils import shaping_utils
 import numpy as np
 
 
-def load(test_size):
+def load(test_size, n_steps):
   '''
   Loads preprocessed data dump if possible.
   '''
@@ -14,12 +14,12 @@ def load(test_size):
     ### Testing dataset load.
 
     # Load testing features
-    with open(config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_X",
+    with open(config.DUMPS_DIR + "test_X_" + str(n_steps) + ".np",
               'rb') as f_x:
       set_logger.info("Testing features exist. Processing...")
       full_test_X = np.load(f_x)
     # Load testing labels
-    with open(config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_Y",
+    with open(config.DUMPS_DIR + "test_Y_" + str(n_steps) + ".np",
               'rb') as f_y:
       set_logger.info("Testing labels exist. Processing...")
       full_test_Y = np.load(f_y)
@@ -41,12 +41,12 @@ def load(test_size):
     ### Training dataset load.
 
     # Load training features
-    with open(config.DUMPS_DIR + config.PROCESSED_TRAIN_NAME + "_X",
+    with open(config.DUMPS_DIR + "train_X_" + str(n_steps) + ".np",
               'rb') as f_x:
       set_logger.info("Training features exist. Processing...")
       train_X = np.load(f_x)
     # Load training labels
-    with open(config.DUMPS_DIR + config.PROCESSED_TRAIN_NAME + "_Y",
+    with open(config.DUMPS_DIR + "train_Y_" + str(n_steps) + ".np",
               'rb') as f_y:
       set_logger.info("Training labels exist. Processing...")
       train_Y = np.load(f_y)
@@ -62,19 +62,19 @@ def load(test_size):
     return None
 
 
-def load_full_test():
+def load_full_test(n_steps):
   '''
   Loads preprocessed data dump for test if possible.
   '''
 
   try:
     # Load testing features
-    with open(config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_X",
+    with open(config.DUMPS_DIR + "test_X_" + str(n_steps) + ".np",
               'rb') as f_x:
       set_logger.info("Testing features exist. Processing...")
       full_test_X = np.load(f_x)
     # Load testing labels
-    with open(config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_Y",
+    with open(config.DUMPS_DIR + "test_Y_" + str(n_steps) + ".np",
               'rb') as f_y:
       set_logger.info("Testing labels exist. Processing...")
       full_test_Y = np.load(f_y)

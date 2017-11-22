@@ -4,7 +4,7 @@ from ..utils import shaping_utils
 import pickle
 
 
-def load(test_size):
+def load(test_size, n_steps):
   '''
   Loads preprocessed data dump if possible.
   '''
@@ -13,7 +13,7 @@ def load(test_size):
     #######################################
     ### Dataset load.
 
-    with open(config.DUMPS_DIR + config.PROCESSED_NAME, "rb") as f:
+    with open(config.DUMPS_DIR + "dataset_" + str(n_steps) + ".p", "rb") as f:
       set_logger.info("Dataset exists. Processing...")
       X, Y = pickle.load(f)
 
@@ -39,13 +39,13 @@ def load(test_size):
     return None
 
 
-def load_full_test():
+def load_full_test(n_steps):
   '''
   Loads preprocessed data dump for test if possible.
   '''
 
   try:
-    with open(config.DUMPS_DIR + config.PROCESSED_NAME, "rb") as f:
+    with open(config.DUMPS_DIR + "dataset_" + str(n_steps) + ".p", "rb") as f:
       set_logger.info("Dataset exists. Processing...")
       X, Y = pickle.load(f)
     X, Y = shaping_utils.shuffle_twins((X, Y))

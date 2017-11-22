@@ -1,6 +1,7 @@
+from ..utils.network_utils import upload_file
 from . import config, preprocess_file
-import pickle
 from .logger import set_logger
+import pickle
 import argparse
 
 
@@ -14,12 +15,16 @@ def main(n_steps):
 
   # Preprocess file
   X, Y = preprocess_file(
-      config.DUMPS_DIR + config.RAW_NAME, n_steps)
+      config.RAW_DATASET_PATH, n_steps)
   set_logger.info("Dataset preprocessed.")
 
-  with open(config.DUMPS_DIR + config.PROCESSED_NAME, 'wb') as f:
+  with open(config.DUMPS_DIR + "dataset_" + str(n_steps) + ".p", 'wb') as f:
     pickle.dump((X, Y), f)
     set_logger.info("Dataset pickle loaded and dumped.")
+
+  # Upload file
+  upload_file("datasets", "isot_" + str(n_steps),
+              config.DUMPS_DIR + "dataset_" + str(n_steps) + ".p")
 
   return None
 

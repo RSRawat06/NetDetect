@@ -7,9 +7,7 @@ import os
 
 DUMPS_DIR = os.path.dirname(os.path.realpath(__file__)) + "/dumps/"
 
-RAW_NAME = "isot_full.csv"
-PROCESSED_NAME = "processed_dataset.p"
-DATASET_URL = ""
+RAW_DATASET_PATH = DUMPS_DIR + "isot_full.csv"
 
 participant_fields = ['Eth_val']
 numerical_fields = [

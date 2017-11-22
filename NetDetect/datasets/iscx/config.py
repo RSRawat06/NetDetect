@@ -7,16 +7,8 @@ import os
 
 DUMPS_DIR = os.path.dirname(os.path.realpath(__file__)) + "/dumps/"
 
-RAW_TRAIN_NAME = "ISCX_Botnet-Training.pcap_ISCX.csv"
-RAW_TEST_NAME = "ISCX_Botnet-Testing.pcap_ISCX.csv"
-
-PROCESSED_TRAIN_NAME = "train_dataset.np"
-PROCESSED_TEST_NAME = "test_dataset.np"
-
-TRAIN_FEATURES_URL = ""
-TRAIN_LABELS_URL = ""
-TEST_FEATURES_URL = ""
-TEST_LABELS_URL = ""
+RAW_TRAINING_DATASET_PATH = DUMPS_DIR + "ISCX_Botnet-Training.pcap_ISCX.csv"
+RAW_TESTING_DATASET_PATH = DUMPS_DIR + "ISCX_Botnet-Testing.pcap_ISCX.csv"
 
 participant_fields = ["Source_IP", "Destination_IP"]
 numerical_fields = [

@@ -3,9 +3,40 @@ This module offers miscellanious networking functions.
 """
 
 import requests
+from azure.storage.blob import ContentSettings, BlockBlobService
 
 
-def download_file(url, file_path):
+block_blob_service = BlockBlobService(
+    account_name='netdetect',
+    account_key='***REMOVED***'
+                '***REMOVED***
+)
+
+
+def download_file(container_name, blob_name, file_path):
+  '''
+  Download file from Azure blob.
+  '''
+
+  assert(blob_name in [x.name for x in
+                       block_blob_service.list_blobs(container_name)])
+  block_blob_service.get_blob_to_path(container_name, blob_name, file_path)
+
+
+def upload_file(container_name, blob_name, file_path):
+  '''
+  Upload file from Azure blob.
+  '''
+
+  block_blob_service.create_blob_from_path(
+      container_name,
+      blob_name,
+      file_path,
+      content_settings=ContentSettings()
+  )
+
+
+def standard_download_file(url, file_path):
   '''
   Generic function to stream-download a large file.
   Args:

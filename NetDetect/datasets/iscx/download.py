@@ -1,15 +1,29 @@
-from . import config
 from ..utils.network_utils import download_file
+from . import config
+import argparse
 
 
 if __name__ == "__main__":
-  download_file(config.TRAIN_FEATURES_URL,
-                config.DUMPS_DIR + config.PROCESSED_TRAIN_NAME + "_features")
-  download_file(config.TRAIN_LABELS_URL,
-                config.DUMPS_DIR + config.PROCESSED_TRAIN_NAME + "_labels")
+  # Set up n_steps
+  parser = argparse.ArgumentParser()
+  parser.add_argument("-steps", "--steps",
+                      help="Steps in sequence.",
+                      type=int, required=True)
+  n_steps = str(parser.parse_args().steps)
 
-  download_file(config.TEST_FEATURES_URL,
-                config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_features")
-  download_file(config.TEST_LABELS_URL,
-                config.DUMPS_DIR + config.PROCESSED_TEST_NAME + "_labels")
+  # Download training set to:
+  # /iscx_train_X_24 -> /train_X_24.np
+  # /iscx_train_Y_24 -> /train_Y_24.np
+  download_file("iscx_train_X_" + n_steps,
+                config.DUMPS_DIR + "train_X_" + n_steps + ".np")
+  download_file("iscx_train_Y_" + n_steps,
+                config.DUMPS_DIR + "train_Y_" + n_steps + ".np")
+
+  # Download testing set
+  # /iscx_test_X_24 -> /test_X_24.np
+  # /iscx_test_Y_24 -> /test_Y_24.np
+  download_file("iscx_test_X_" + n_steps,
+                config.DUMPS_DIR + "test_X_" + n_steps + ".np")
+  download_file("iscx_test_Y_" + n_steps,
+                config.DUMPS_DIR + "test_Y_" + n_steps + ".np")
 

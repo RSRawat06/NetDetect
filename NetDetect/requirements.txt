@@ -9,3 +9,4 @@ flask
 flask-restful
 flask-api
 flask-cors
+azure-storage-blob
