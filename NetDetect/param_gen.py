@@ -10,8 +10,8 @@ def gen_commands(model_name_opts, s_batch_opts,
                 "--n_steps=%s " \
                 "--v_regularization=%s " \
                 "--s_test=4096 " \
-                "--s_report_interval=120 " \
-                "--s_save_interval=1200 " \
+                "--s_report_interval=2400 " \
+                "--s_save_interval=7200 " \
                 % (model_name, s_batch, n_steps, v_regularization)
 
 
