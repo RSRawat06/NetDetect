@@ -8,8 +8,7 @@ from azure.storage.blob import ContentSettings, BlockBlobService
 
 block_blob_service = BlockBlobService(
     account_name='netdetect',
-    account_key='***REMOVED***'
-                '***REMOVED***
+    account_key='REDACTED'
 )
 
 
