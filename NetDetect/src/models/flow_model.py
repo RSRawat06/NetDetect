@@ -7,9 +7,9 @@ class FlowModel(Base, SequenceLayers):
   Model for predicting on flows.
   '''
 
-  def __init__(self, sess, config, logger):
+  def __init__(self, sess, flags, logger):
     logger.info('Instantiated flow model')
-    Base.__init__(self, sess, config, logger)
+    Base.__init__(self, sess, flags, logger)
 
   def build_model(self):
     '''
@@ -17,36 +17,36 @@ class FlowModel(Base, SequenceLayers):
     '''
 
     self.logger.info('Building model...')
-    config = self.config
+    flags = self.flags
 
     self.x = tf.placeholder(
-        tf.float32, (config.s_batch, config.n_steps, config.n_features))
+        tf.float32, (flags.s_batch, flags.n_steps, flags.n_features))
     self.target = tf.placeholder(tf.float32,
-                                 (config.s_batch, config.n_classes))
+                                 (flags.s_batch, flags.n_classes))
 
     encoder_config = {
-        'n_batches': config.s_batch,
-        'n_steps': config.n_steps,
-        'n_features': config.n_features,
-        'h_gru': config.h_gru,
-        'h_dense': config.o_gru
+        'n_batches': flags.s_batch,
+        'n_steps': flags.n_steps,
+        'n_features': flags.n_features,
+        'h_gru': flags.h_gru,
+        'h_dense': flags.o_gru
     }
     encoded_state = self._encoder_layer(
         self.x, "encoder", encoder_config)
 
     dense_config = {
-        'n_batches': config.s_batch,
-        'n_input': config.o_gru,
-        'n_hidden': config.h_dense,
-        'n_output': config.o_dense
+        'n_batches': flags.s_batch,
+        'n_input': flags.o_gru,
+        'n_hidden': flags.h_dense,
+        'n_output': flags.o_dense
     }
     dense_state = self._dense_layer(
         encoded_state, "dense", dense_config)
 
     predictor_config = {
-        'n_batches': config.s_batch,
-        'n_input': config.o_dense,
-        'n_classes': config.n_classes
+        'n_batches': flags.s_batch,
+        'n_input': flags.o_dense,
+        'n_classes': flags.n_classes
     }
     self.prediction = self._prediction_layer(
         dense_state,
@@ -57,7 +57,7 @@ class FlowModel(Base, SequenceLayers):
         self.target,
         self.prediction,
         [1, 1],
-        self.config.v_regularization
+        flags.v_regularization
     )
     self.tpr, self.fpr, self.acc = self._define_binary_metrics(
         self.target,

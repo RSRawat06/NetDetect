@@ -1,1 +1,1 @@
-from . import load, train
+from . import train, evaluate

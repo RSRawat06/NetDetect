@@ -5,55 +5,7 @@ from . import config
 import tensorflow as tf
 
 
-FLAGS = tf.app.flags.FLAGS
-
-tf.app.flags.DEFINE_string("model_name", "FlowAttModel",
-                           "FlowAttModel/FlowModel")
-tf.app.flags.DEFINE_integer("s_batch", 32,
-                            "Size of batches")
-tf.app.flags.DEFINE_float("v_regularization", 0.15,
-                          "Value of regularization term")
-
-tf.app.flags.DEFINE_integer("n_features", 13,
-                            "Number of features")
-tf.app.flags.DEFINE_integer("n_steps", 22,
-                            "Number of steps in input sequence")
-
-tf.app.flags.DEFINE_integer("h_gru", 16,
-                            "Hidden units in GRU layer")
-tf.app.flags.DEFINE_integer("h_att", 8,
-                            "Hidden units in attention mechanism")
-tf.app.flags.DEFINE_integer("o_gru", 16,
-                            "Output units in GRU layer")
-tf.app.flags.DEFINE_integer("h_dense", 8,
-                            "Hidden units in first dense layer")
-tf.app.flags.DEFINE_integer("o_dense", 8,
-                            "Output units in first dense layer")
-tf.app.flags.DEFINE_integer("h_dense2", 8,
-                            "Hidden units in second dense layer")
-tf.app.flags.DEFINE_integer("o_dense2", 8,
-                            "Output units in second dense layer")
-tf.app.flags.DEFINE_integer("n_classes", 2,
-                            "Number of label classes")
-
-tf.app.flags.DEFINE_integer("n_iterations", 100,
-                            "Number of iterations")
-tf.app.flags.DEFINE_integer("s_test", 4096,
-                            "Size of test set")
-tf.app.flags.DEFINE_integer("s_report_interval", 2000,
-                            "Number of epochs per report cycle")
-tf.app.flags.DEFINE_integer("s_save_interval", 1000,
-                            "Number of epochs per save cycle")
-
-tf.app.flags.DEFINE_string("graphs_train_dir", config.graphs_train_dir,
-                           "Graph train directory")
-tf.app.flags.DEFINE_string("graphs_test_dir", config.graphs_test_dir,
-                           "Graph test directory")
-tf.app.flags.DEFINE_string("checkpoints_dir", config.checkpoints_dir,
-                           "Checkpoints directory")
-
-
-def train():
+def train(FLAGS):
   with tf.Session() as sess:
     ##############################
     ### Create model depending on spec.
@@ -70,7 +22,7 @@ def train():
     ### Log provided hyperparameters.
     param_desc = ""
     for name, val in FLAGS.__dict__['__flags'].items():
-      param_desc += "\n" + name + str(val)
+      param_desc += "\n" + name + ": " + str(val)
     train_logger.info("Parameters: " + param_desc)
     ##############################
 
@@ -137,6 +89,52 @@ def train():
 
 
 if __name__ == "__main__":
-  train()
+  FLAGS = tf.app.flags.FLAGS
 
+  tf.app.flags.DEFINE_string("model_name", "FlowAttModel",
+                             "FlowAttModel/FlowModel")
+  tf.app.flags.DEFINE_integer("s_batch", 32,
+                              "Size of batches")
+  tf.app.flags.DEFINE_float("v_regularization", 0.15,
+                            "Value of regularization term")
+
+  tf.app.flags.DEFINE_integer("n_features", 13,
+                              "Number of features")
+  tf.app.flags.DEFINE_integer("n_steps", 22,
+                              "Number of steps in input sequence")
+
+  tf.app.flags.DEFINE_integer("h_gru", 16,
+                              "Hidden units in GRU layer")
+  tf.app.flags.DEFINE_integer("h_att", 8,
+                              "Hidden units in attention mechanism")
+  tf.app.flags.DEFINE_integer("o_gru", 16,
+                              "Output units in GRU layer")
+  tf.app.flags.DEFINE_integer("h_dense", 8,
+                              "Hidden units in first dense layer")
+  tf.app.flags.DEFINE_integer("o_dense", 8,
+                              "Output units in first dense layer")
+  tf.app.flags.DEFINE_integer("h_dense2", 8,
+                              "Hidden units in second dense layer")
+  tf.app.flags.DEFINE_integer("o_dense2", 8,
+                              "Output units in second dense layer")
+  tf.app.flags.DEFINE_integer("n_classes", 2,
+                              "Number of label classes")
+
+  tf.app.flags.DEFINE_integer("n_iterations", 100,
+                              "Number of iterations")
+  tf.app.flags.DEFINE_integer("s_test", 4096,
+                              "Size of test set")
+  tf.app.flags.DEFINE_integer("s_report_interval", 2000,
+                              "Number of epochs per report cycle")
+  tf.app.flags.DEFINE_integer("s_save_interval", 1000,
+                              "Number of epochs per save cycle")
+
+  tf.app.flags.DEFINE_string("graphs_train_dir", config.GRAPHS_TRAIN_DIR,
+                             "Graph train directory")
+  tf.app.flags.DEFINE_string("graphs_test_dir", config.GRAPHS_TEST_DIR,
+                             "Graph test directory")
+  tf.app.flags.DEFINE_string("checkpoints_dir", config.CHECKPOINTS_DIR,
+                             "Checkpoints directory")
+
+  train(FLAGS)
 
