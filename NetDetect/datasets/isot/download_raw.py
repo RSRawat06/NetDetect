@@ -4,5 +4,5 @@ from . import config
 
 if __name__ == "__main__":
   # Download set
-  download_file("isot_raw", RAW_DATASET_PATH)
+  download_file("datasets", "isot_raw", config.RAW_DATASET_PATH)
 

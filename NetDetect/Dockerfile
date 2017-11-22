@@ -21,5 +21,4 @@ RUN pip3 install -r ./requirements.txt
 
 # Hop into /
 WORKDIR /
-RUN service neo4j start
 
