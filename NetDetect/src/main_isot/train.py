@@ -28,7 +28,7 @@ def train(FLAGS):
 
     ##############################
     ### Load dataset
-    train_dataset, test_dataset = load(FLAGS.s_test)
+    train_dataset, test_dataset = load(FLAGS.s_test, FLAGS.n_steps)
     train_logger.info("Dataset loaded.")
     ##############################
 

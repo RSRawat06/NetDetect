@@ -27,7 +27,7 @@ def evaluate(FLAGS):
 
     ##############################
     ### Load dataset
-    test_dataset = load_full_test()
+    test_dataset = load_full_test(FLAGS.n_steps)
     eval_logger.info("Dataset loaded.")
     ##############################
 
