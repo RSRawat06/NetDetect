@@ -1,6 +1,7 @@
 from ...src.models import FlowAttModel, FlowModel
 from ...datasets.isot import load_full_test
 from .logger import eval_logger
+from . import config
 import tensorflow as tf
 
 
@@ -79,6 +80,13 @@ if __name__ == "__main__":
                               "Output units in second dense layer")
   tf.app.flags.DEFINE_integer("n_classes", 2,
                               "Number of label classes")
+
+  tf.app.flags.DEFINE_string("graphs_train_dir", config.GRAPHS_TRAIN_DIR,
+                             "Graph train directory")
+  tf.app.flags.DEFINE_string("graphs_test_dir", config.GRAPHS_TEST_DIR,
+                             "Graph test directory")
+  tf.app.flags.DEFINE_string("checkpoints_dir", config.CHECKPOINTS_DIR,
+                             "Checkpoints directory")
 
   evaluate(FLAGS)
 
