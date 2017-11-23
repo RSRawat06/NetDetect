@@ -1,7 +1,7 @@
 def gen_commands(model_name_opts, s_batch_opts,
                  n_steps_opts, v_regularization_opts):
-  for model_name in model_name_opts:
-    for s_batch in s_batch_opts:
+  for s_batch in s_batch_opts:
+    for model_name in model_name_opts:
       for n_steps in n_steps_opts:
         for v_regularization in v_regularization_opts:
           yield "python3 -m NetDetect.src.main_iscx.train " \
@@ -12,16 +12,17 @@ def gen_commands(model_name_opts, s_batch_opts,
                 "--s_test=4096 " \
                 "--s_report_interval=2400 " \
                 "--s_save_interval=7200 " \
+                "--n_iterations=30 " \
                 % (model_name, s_batch, n_steps, v_regularization)
 
 
 def main():
   model_name_opts = ["flowattmodel", "flowmodel"]
-  s_batch_opts = [8, 32]
+  s_batch_opts = [512, 128]
   n_steps_opts = [16, 28]
-  v_regularization_opts = [0.01, 0.1, 0.4, 0.8, 1.2, 2]
-  for command_ in gen_commands(model_name_opts, s_batch_opts,
-                               n_steps_opts, v_regularization_opts):
+  v_regularization_opts = [0.1, 0.01, 0.4, 0.8]
+  for i, command_ in enumerate(gen_commands(model_name_opts, s_batch_opts,
+                               n_steps_opts, v_regularization_opts)):
     print(command_)
 
 
