@@ -1,5 +1,5 @@
 from ...src.models import FlowAttModel, FlowModel
-from ...datasets.iscx import load
+from ...datasets import iscx, isot
 from .logger import train_logger
 from . import config
 import tensorflow as tf
@@ -8,7 +8,16 @@ import tensorflow as tf
 def train(FLAGS):
   with tf.Session() as sess:
     ##############################
-    ### Create model depending on spec.
+    ### Log hyperparameters.
+    param_desc = FLAGS.model_name
+    for flag, val in FLAGS.__dict__['__flags'].items():
+      param_desc += "; " + flag + ": " + str(val)
+    train_logger.debug("Parameters: " + param_desc)
+    ##############################
+
+    ##############################
+    ### Instantiate model.
+    ### Valid specs: flowattmodel, flowmodel.
     if FLAGS.model_type.lower() == "flowattmodel":
       model = FlowAttModel(sess, FLAGS, train_logger,
                            model_name=FLAGS.model_name)
@@ -16,22 +25,18 @@ def train(FLAGS):
       model = FlowModel(sess, FLAGS, train_logger,
                         model_name=FLAGS.model_name)
     else:
-      raise ValueError("No valid model spec.")
-    train_logger.info("Model created.")
+      raise ValueError("Invalid model type.")
     ##############################
 
     ##############################
-    ### Log provided hyperparameters.
-    param_desc = ""
-    for name, val in FLAGS.__dict__['__flags'].items():
-      param_desc += "\n" + name + ": " + str(val)
-    train_logger.info("Parameters: " + param_desc)
-    ##############################
-
-    ##############################
-    ### Load dataset
-    train_dataset, test_dataset = load(FLAGS.s_test, FLAGS.n_steps)
-    train_logger.info("Dataset loaded.")
+    ### Load dataset.
+    ### Valid specs: iscx, isot.
+    if FLAGS.dataset.lower() == "iscx":
+      train_dataset, test_dataset = iscx.load(FLAGS.s_test, FLAGS.n_steps)
+    elif FLAGS.dataset.lower() == "isot":
+      train_dataset, test_dataset = isot.load(FLAGS.s_test, FLAGS.n_steps)
+    else:
+      raise ValueError("Invalid dataset.")
     ##############################
 
     ##############################
@@ -40,8 +45,8 @@ def train(FLAGS):
     ##############################
 
     ##############################
-    ### Define epoch_eval func.
-    def __epoch_evaluation(self, iteration):
+    ### Define report func.
+    def __report_func(self, iteration):
       # Evaluate on subset of training dataset.
       loss, acc, tpr, fpr, summary = self.evaluate(
           train_dataset[0][:FLAGS.s_test],
@@ -49,17 +54,20 @@ def train(FLAGS):
           prefix="train"
       )
       self.logger.info(
-          "Epoch: %f has train loss: %f, train accuracy: %f, \
-           TPR: %s, FPR: %s" % (iteration, loss, acc, str(tpr), str(fpr)))
+          FLAGS.model_name +
+          "; iteration: %f, train loss: %f, train accuracy: %f, "
+          "train TPR: %s, train FPR: %s"
+          % (iteration, loss, acc, str(tpr), str(fpr)))
       self.train_writer.add_summary(summary, global_step=self.global_step)
 
       # Evaluate on subset of testing dataset.
       loss, acc, tpr, fpr, summary = self.evaluate(
           test_dataset[0], test_dataset[1], prefix="test")
-      print("Loss:", loss)
       self.logger.info(
-          "Epoch: %f has test loss: %f, test accuracy: %f, \
-           TPR: %s, FPR: %s" % (iteration, loss, acc, str(tpr), str(fpr)))
+          FLAGS.model_name +
+          "; iteration: %f, test loss: %f, test accuracy: %f, "
+          "test TPR: %s, test FPR: %s"
+          % (iteration, loss, acc, str(tpr), str(fpr)))
       self.test_writer.add_summary(summary, global_step=self.global_step)
 
       # Determine min acc or save
@@ -68,7 +76,6 @@ def train(FLAGS):
       elif (acc > self.min_acc):
         self.min_acc = acc
         self.save(self.global_step)
-
     ##############################
 
     ##############################
@@ -76,19 +83,9 @@ def train(FLAGS):
     model.train(
         train_dataset[0],
         train_dataset[1],
-        __epoch_evaluation
+        __report_func
     )
-    train_logger.info("Model trained.")
-    ##############################
-
-    ##############################
-    ### Evaluate
-    loss, acc, tpr, fpr, summary = model.evaluate(
-        test_dataset[0], test_dataset[1], prefix="test")
-    print("Total test loss:", loss)
-    train_logger.info(
-        "Total test loss: %f, total test accuracy: %f, \
-         TPR: %s, FPR: %s" % (loss, acc, str(tpr), str(fpr)))
+    print(FLAGS.model_name + ": training complete.")
     ##############################
 
 

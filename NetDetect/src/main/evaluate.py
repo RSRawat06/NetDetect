@@ -1,5 +1,5 @@
 from ...src.models import FlowAttModel, FlowModel
-from ...datasets.iscx import load_full_test
+from ...datasets import iscx, isot
 from .logger import eval_logger
 from . import config
 import tensorflow as tf
@@ -8,7 +8,16 @@ import tensorflow as tf
 def evaluate(FLAGS):
   with tf.Session() as sess:
     ##############################
-    ### Create model depending on spec.
+    ### Log hyperparameters.
+    param_desc = FLAGS.model_name
+    for flag, val in FLAGS.__dict__['__flags'].items():
+      param_desc += "; " + flag + ": " + str(val)
+    eval_logger.info("Parameters: " + param_desc)
+    ##############################
+
+    ##############################
+    ### Instantiate model.
+    ### Valid specs: flowattmodel, flowmodel.
     if FLAGS.model_type.lower() == "flowattmodel":
       model = FlowAttModel(sess, FLAGS, eval_logger,
                            model_name=FLAGS.model_name)
@@ -16,22 +25,18 @@ def evaluate(FLAGS):
       model = FlowModel(sess, FLAGS, eval_logger,
                         model_name=FLAGS.model_name)
     else:
-      raise ValueError("No valid model spec.")
-    eval_logger.info("Model created.")
+      raise ValueError("Invalid model type.")
     ##############################
 
     ##############################
-    ### Log provided hyperparameters.
-    param_desc = ""
-    for name, val in FLAGS.__dict__['__flags'].items():
-      param_desc += "\n" + name + ": " + str(val)
-    eval_logger.info("Parameters: " + param_desc)
-    ##############################
-
-    ##############################
-    ### Load dataset
-    test_dataset = load_full_test(FLAGS.n_steps)
-    eval_logger.info("Dataset loaded.")
+    ### Load dataset.
+    ### Valid specs: iscx, isot.
+    if FLAGS.dataset.lower() == "iscx":
+      test_dataset = iscx.load_full_test(FLAGS.n_steps)
+    elif FLAGS.dataset.lower() == "isot":
+      test_dataset = isot.load_full_test(FLAGS.n_steps)
+    else:
+      raise ValueError("Invalid dataset.")
     ##############################
 
     ##############################
@@ -44,10 +49,11 @@ def evaluate(FLAGS):
     ### Evaluate
     loss, acc, tpr, fpr, summary = model.evaluate(
         test_dataset[0], test_dataset[1], prefix="test")
-    print("Total test loss:", loss)
     eval_logger.info(
-        "Total test loss: %f, total test accuracy: %f, \
-         TPR: %s, FPR: %s" % (loss, acc, str(tpr), str(fpr)))
+        FLAGS.model_name +
+        "; loss: %f, accuracy: %f, TPR: %s, FPR: %s"
+        % (loss, acc, str(tpr), str(fpr)))
+    print(FLAGS.model_name + ": testing complete.")
     ##############################
 
 
