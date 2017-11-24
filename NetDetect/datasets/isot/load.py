@@ -18,7 +18,7 @@ def load(test_size, n_steps):
       X, Y = pickle.load(f)
 
     # Shuffle dataset
-    X, Y = shaping_utils.shuffle_twins((X, Y))
+    X, Y = shaping_utils.shuffle_twins(X, Y)
 
     # Cut testing features
     test_X = X[:test_size]
@@ -48,7 +48,7 @@ def load_full_test(n_steps):
     with open(config.DUMPS_DIR + "dataset_" + str(n_steps) + ".p", "rb") as f:
       set_logger.info("Dataset exists. Processing...")
       X, Y = pickle.load(f)
-    X, Y = shaping_utils.shuffle_twins((X, Y))
+    X, Y = shaping_utils.shuffle_twins(X, Y)
     return X, Y
 
   except (EOFError, OSError, IOError) as e:
