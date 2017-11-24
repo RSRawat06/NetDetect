@@ -4,33 +4,48 @@ networks:
   default:
 
 services:
-  cicflowmeter:
-    build:
-      context: .
-      dockerfile: ./CICFlowMeter/Dockerfile
-    volumes:
-      - ./CICFlowMeter:/CICFlowMeter
-    networks:
-      - default
-    tty: true
-
-  minimumfeaturizer:
-    build:
-      context: .
-      dockerfile: ./MinimumFeaturizer/Dockerfile
-    volumes:
-      - ./MinimumFeaturizer:/MinimumFeaturizer
-    networks:
-      - default
-    tty: true
-
-  netdetect:
+  netdetect1:
     build:
       context: .
       dockerfile: ./NetDetect/Dockerfile
     volumes:
-      - ./NetDetect:/NetDetect
-    networks:
-      - default
+      - ./NetDetect/datasets:/NetDetect/datasets
+    command: sh -c "python3 NetDetect/param_gen.py -dice 0 -total 5 | bash"
+    tty: true
+
+  netdetect2:
+    build:
+      context: .
+      dockerfile: ./NetDetect/Dockerfile
+    volumes:
+      - ./NetDetect/datasets:/NetDetect/datasets
+    command: sh -c "python3 NetDetect/param_gen.py -dice 1 -total 5 | bash"
+    tty: true
+
+  netdetect3:
+    build:
+      context: .
+      dockerfile: ./NetDetect/Dockerfile
+    volumes:
+      - ./NetDetect/datasets:/NetDetect/datasets
+    command: sh -c "python3 NetDetect/param_gen.py -dice 2 -total 5 | bash"
+    tty: true
+
+  netdetect4:
+    build:
+      context: .
+      dockerfile: ./NetDetect/Dockerfile
+    volumes:
+      - ./NetDetect/datasets:/NetDetect/datasets
+    command: sh -c "python3 NetDetect/param_gen.py -dice 3 -total 5 | bash"
+    tty: true
+
+  netdetect5:
+    build:
+      context: .
+      dockerfile: ./NetDetect/Dockerfile
+    volumes:
+      - ./NetDetect/datasets:/NetDetect/datasets
+    command: sh -c "python3 NetDetect/param_gen.py -dice 4 -total 5 | bash"
     tty: true
 
