@@ -9,10 +9,10 @@ def train(FLAGS):
   with tf.Session() as sess:
     ##############################
     ### Log hyperparameters.
-    param_desc = FLAGS.model_name
+    param_desc = FLAGS.model_name + ":   "
     for flag, val in FLAGS.__dict__['__flags'].items():
-      param_desc += "; " + flag + ": " + str(val)
-    train_logger.debug("Parameters: " + param_desc)
+      param_desc += flag + ": " + str(val) + "; "
+    train_logger.debug("Parameters " + param_desc)
     ##############################
 
     ##############################
@@ -58,7 +58,7 @@ def train(FLAGS):
           "; iteration: %f, train loss: %f, train accuracy: %f, "
           "train TPR: %s, train FPR: %s"
           % (iteration, loss, acc, str(tpr), str(fpr)))
-      self.train_writer.add_summary(summary, global_step=self.global_step)
+      self.train_writer.add_summary(summary, global_step=iteration)
 
       # Evaluate on subset of testing dataset.
       loss, acc, tpr, fpr, summary = self.evaluate(
@@ -68,7 +68,7 @@ def train(FLAGS):
           "; iteration: %f, test loss: %f, test accuracy: %f, "
           "test TPR: %s, test FPR: %s"
           % (iteration, loss, acc, str(tpr), str(fpr)))
-      self.test_writer.add_summary(summary, global_step=self.global_step)
+      self.test_writer.add_summary(summary, global_step=iteration)
 
       # Determine min acc or save
       if self.min_acc is None:
@@ -92,6 +92,8 @@ def train(FLAGS):
 if __name__ == "__main__":
   FLAGS = tf.app.flags.FLAGS
 
+  tf.app.flags.DEFINE_string("dataset", "blank",
+                             "Which dataset to use: iscx/isot")
   tf.app.flags.DEFINE_string("model_name", "default.model",
                              "Name of model to be used in logs.")
   tf.app.flags.DEFINE_string("model_type", "FlowAttModel",

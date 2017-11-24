@@ -9,10 +9,10 @@ def evaluate(FLAGS):
   with tf.Session() as sess:
     ##############################
     ### Log hyperparameters.
-    param_desc = FLAGS.model_name
+    param_desc = FLAGS.model_name + ":   "
     for flag, val in FLAGS.__dict__['__flags'].items():
-      param_desc += "; " + flag + ": " + str(val)
-    eval_logger.info("Parameters: " + param_desc)
+      param_desc += flag + ": " + str(val) + "; "
+    eval_logger.debug("Parameters " + param_desc)
     ##############################
 
     ##############################
@@ -60,6 +60,8 @@ def evaluate(FLAGS):
 if __name__ == "__main__":
   FLAGS = tf.app.flags.FLAGS
 
+  tf.app.flags.DEFINE_string("dataset", "blank",
+                             "Which dataset to use: iscx/isot")
   tf.app.flags.DEFINE_string("model_name", "default.model",
                              "Name of model to be used in logs.")
   tf.app.flags.DEFINE_string("model_type", "FlowAttModel",
