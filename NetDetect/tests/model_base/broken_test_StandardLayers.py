@@ -20,7 +20,7 @@ def test_optimizations():
   prediction = tf.placeholder(tf.float32, (3, 5))
   target = tf.placeholder(tf.float32, (3, 5))
   loss, acc = StandardLayers()._define_optimization_vars(
-      target, prediction, None)
+      target, prediction, [1, 1, 0, 0, 1], 0.1)
 
   assert(loss.shape == [])
   assert(loss.dtype == tf.float32)
@@ -31,7 +31,7 @@ def test_optimizations():
 def test_binary_metrics():
   prediction = tf.placeholder(tf.float32, (3, 5))
   target = tf.placeholder(tf.float32, (3, 5))
-  TPR, FPR = StandardLayers()._define_binary_metrics(
+  TPR, FPR, acc = StandardLayers()._define_binary_metrics(
       target, prediction)
 
   assert(TPR.shape == [])
