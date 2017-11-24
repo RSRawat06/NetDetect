@@ -8,19 +8,23 @@ class Base(StandardLayers):
   Base model featuring useful Tensorflow utilities.
   '''
 
-  def __init__(self, sess, flags, logger, global_step=0):
+  def __init__(self, sess, flags, logger, global_step=0,
+               model_name="default.model"):
     '''
     Initiate base model.
     Args:
       - sess: tf.Session().
       - flags: flags with model config.
       - logger: custom logger handler.
+      - global_step: global_step of the model.
+      - model_name: name of the model.
     '''
 
     self.sess = sess
     self.flags = flags
     self.logger = logger
-    self.model_name = "default.model"
+    self.model_name = model_name
+    self.min_acc = None
     self.global_step = tf.Variable(global_step,
                                    dtype=tf.int32,
                                    trainable=False,
@@ -97,8 +101,8 @@ class Base(StandardLayers):
 
     self.logger.info('Starting model training...')
 
-    sub_epoch = 0
-    for epoch in range(self.flags.n_iterations):
+    iteration = 0
+    for epoch in range(self.flags.n_epochs):
       for x_batch, y_batch in self.yield_batch(X, Y):
         feed_dict = {
             self.x: x_batch,
@@ -108,14 +112,11 @@ class Base(StandardLayers):
             [self.optim, self.loss],
             feed_dict=feed_dict)
 
-        if sub_epoch % self.flags.s_report_interval == 0:
+        if iteration % self.flags.s_report_interval == 0:
           print("Train batch loss: ", loss)
-          report_func(self, sub_epoch)
+          report_func(self, iteration)
 
-        if (sub_epoch - 1) % self.flags.s_save_interval == 0:
-          self.save(self.global_step)
-
-        sub_epoch += 1
+        iteration += 1
 
     self.logger.info('Model finished training!')
 
@@ -166,17 +167,18 @@ class Base(StandardLayers):
           feed_dict=feed_dict)
       tpr = float(tpr)
       fpr = float(fpr)
-      # print("loss:", loss)
       all_loss.append(loss)
       all_tpr.append(tpr)
       all_fpr.append(fpr)
       all_acc.append(acc)
 
+    # Average metrics
     avg_loss = np.mean(all_loss)
     avg_tpr = np.mean(all_tpr)
     avg_fpr = np.mean(all_fpr)
     avg_acc = np.mean(all_acc)
 
+    # Create summaries
     summary = tf.Summary()
     summary.value.add(tag="%s/Accuracy" % prefix,
                       simple_value=avg_acc)

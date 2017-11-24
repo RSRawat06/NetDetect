@@ -7,9 +7,9 @@ class FlowAttModel(Base, SequenceLayers):
   Model for predicting on flows.
   '''
 
-  def __init__(self, sess, flags, logger):
+  def __init__(self, sess, flags, logger, **kargs):
     logger.info('Instantiated flow att model')
-    Base.__init__(self, sess, flags, logger)
+    Base.__init__(self, sess, flags, logger, **kargs)
 
   def build_model(self):
     '''
