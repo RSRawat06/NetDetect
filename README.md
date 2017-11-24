@@ -1,5 +1,5 @@
-# NetDetect: Botnet Detection without Feature Engineering
-NetDetect applies recurrent neural networks to detect devices infected by botnets in an enterprise-size network.
+# NetDetect: End-to-end differentiable model for botnet detection.
+NetDetect achieves state-of-art botnet detection using bidirectional GRUs with additive attention.
 
 [![Maintenance Intended](http://maintained.tech/badge.svg)](http://maintained.tech/)
 
