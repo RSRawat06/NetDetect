@@ -1,5 +1,5 @@
 from ...src.models import FlowAttModel, FlowModel
-from ...datasets.iscx import load
+from ...datasets import iscx, isot
 from .logger import train_logger
 from . import config
 import tensorflow as tf
@@ -10,28 +10,35 @@ def train(FLAGS):
     tf.set_random_seed(1)
 
     ##############################
-    ### Create model depending on spec.
-    if FLAGS.model_name.lower() == "flowattmodel":
-      model = FlowAttModel(sess, FLAGS, train_logger)
-    elif FLAGS.model_name.lower() == "flowmodel":
-      model = FlowModel(sess, FLAGS, train_logger)
+    ### Log hyperparameters.
+    param_desc = FLAGS.model_name + ":   "
+    for flag, val in FLAGS.__dict__['__flags'].items():
+      param_desc += flag + ": " + str(val) + "; "
+    train_logger.debug("Parameters " + param_desc)
+    ##############################
+
+    ##############################
+    ### Instantiate model.
+    ### Valid specs: flowattmodel, flowmodel.
+    if FLAGS.model_type.lower() == "flowattmodel":
+      model = FlowAttModel(sess, FLAGS, train_logger,
+                           model_name=FLAGS.model_name)
+    elif FLAGS.model_type.lower() == "flowmodel":
+      model = FlowModel(sess, FLAGS, train_logger,
+                        model_name=FLAGS.model_name)
     else:
-      raise ValueError("No valid model spec.")
-    train_logger.info("Model created.")
+      raise ValueError("Invalid model type.")
     ##############################
 
     ##############################
-    ### Log provided hyperparameters.
-    param_desc = ""
-    for name, val in FLAGS.__dict__['__flags'].items():
-      param_desc += "\n" + name + ": " + str(val)
-    train_logger.info("Parameters: " + param_desc)
-    ##############################
-
-    ##############################
-    ### Load dataset
-    train_dataset, test_dataset = load(FLAGS.s_test, FLAGS.n_steps)
-    train_logger.info("Dataset loaded.")
+    ### Load dataset.
+    ### Valid specs: iscx, isot.
+    if FLAGS.dataset.lower() == "iscx":
+      train_dataset, test_dataset = iscx.load(FLAGS.s_test, FLAGS.n_steps)
+    elif FLAGS.dataset.lower() == "isot":
+      train_dataset, test_dataset = isot.load(FLAGS.s_test, FLAGS.n_steps)
+    else:
+      raise ValueError("Invalid dataset.")
     ##############################
 
     ##############################
@@ -40,8 +47,8 @@ def train(FLAGS):
     ##############################
 
     ##############################
-    ### Define epoch_eval func.
-    def __epoch_evaluation(self, sub_epoch):
+    ### Define report func.
+    def __report_func(self, iteration):
       # Evaluate on subset of training dataset.
       loss, acc, tpr, fpr, summary = self.evaluate(
           train_dataset[0][:FLAGS.s_test],
@@ -49,18 +56,28 @@ def train(FLAGS):
           prefix="train"
       )
       self.logger.info(
-          "Epoch: %f has train loss: %f, train accuracy: %f, \
-           TPR: %s, FPR: %s" % (sub_epoch, loss, acc, str(tpr), str(fpr)))
-      self.train_writer.add_summary(summary, global_step=sub_epoch)
+          FLAGS.model_name +
+          "; iteration: %f, train loss: %f, train accuracy: %f, "
+          "train TPR: %s, train FPR: %s"
+          % (iteration, loss, acc, str(tpr), str(fpr)))
+      self.train_writer.add_summary(summary, global_step=iteration)
 
       # Evaluate on subset of testing dataset.
       loss, acc, tpr, fpr, summary = self.evaluate(
           test_dataset[0], test_dataset[1], prefix="test")
-      print("Loss:", loss)
       self.logger.info(
-          "Epoch: %f has test loss: %f, test accuracy: %f, \
-           TPR: %s, FPR: %s" % (sub_epoch, loss, acc, str(tpr), str(fpr)))
-      self.test_writer.add_summary(summary, global_step=sub_epoch)
+          FLAGS.model_name +
+          "; iteration: %f, test loss: %f, test accuracy: %f, "
+          "test TPR: %s, test FPR: %s"
+          % (iteration, loss, acc, str(tpr), str(fpr)))
+      self.test_writer.add_summary(summary, global_step=iteration)
+
+      # Determine min acc or save
+      if self.min_acc is None:
+        self.min_acc = acc
+      elif (acc > self.min_acc):
+        self.min_acc = acc
+        self.save(self.global_step)
     ##############################
 
     ##############################
@@ -68,36 +85,24 @@ def train(FLAGS):
     model.train(
         train_dataset[0],
         train_dataset[1],
-        __epoch_evaluation
+        __report_func
     )
-    train_logger.info("Model trained.")
-    ##############################
-
-    ##############################
-    ### Evaluate
-    loss, acc, tpr, fpr, summary = model.evaluate(
-        test_dataset[0], test_dataset[1], prefix="test")
-    print("Total test loss:", loss)
-    train_logger.info(
-        "Total test loss: %f, total test accuracy: %f, \
-         TPR: %s, FPR: %s" % (loss, acc, str(tpr), str(fpr)))
-    ##############################
-
-    ##############################
-    ### Save model
-    model.save(model.global_step)
-    train_logger.info("Model saved.")
+    print(FLAGS.model_name + ": training complete.")
     ##############################
 
 
 if __name__ == "__main__":
   FLAGS = tf.app.flags.FLAGS
 
-  tf.app.flags.DEFINE_string("model_name", "FlowAttModel",
+  tf.app.flags.DEFINE_string("dataset", "blank",
+                             "Which dataset to use: iscx/isot")
+  tf.app.flags.DEFINE_string("model_name", "default.model",
+                             "Name of model to be used in logs.")
+  tf.app.flags.DEFINE_string("model_type", "FlowAttModel",
                              "FlowAttModel/FlowModel")
-  tf.app.flags.DEFINE_integer("s_batch", 32,
+  tf.app.flags.DEFINE_integer("s_batch", 128,
                               "Size of batches")
-  tf.app.flags.DEFINE_float("v_regularization", 0.15,
+  tf.app.flags.DEFINE_float("v_regularization", 0.1,
                             "Value of regularization term")
 
   tf.app.flags.DEFINE_integer("n_features", 77,
@@ -122,14 +127,12 @@ if __name__ == "__main__":
   tf.app.flags.DEFINE_integer("n_classes", 2,
                               "Number of label classes")
 
-  tf.app.flags.DEFINE_integer("n_iterations", 100,
+  tf.app.flags.DEFINE_integer("n_epochs", 10,
                               "Number of iterations")
   tf.app.flags.DEFINE_integer("s_test", 4096,
                               "Size of test set")
   tf.app.flags.DEFINE_integer("s_report_interval", 2000,
                               "Number of epochs per report cycle")
-  tf.app.flags.DEFINE_integer("s_save_interval", 1000,
-                              "Number of epochs per save cycle")
 
   tf.app.flags.DEFINE_string("graphs_train_dir", config.GRAPHS_TRAIN_DIR,
                              "Graph train directory")

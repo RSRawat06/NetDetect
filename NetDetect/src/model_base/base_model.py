@@ -8,19 +8,23 @@ class Base(StandardLayers):
   Base model featuring useful Tensorflow utilities.
   '''
 
-  def __init__(self, sess, flags, logger, global_step=0):
+  def __init__(self, sess, flags, logger, global_step=0,
+               model_name="default.model"):
     '''
     Initiate base model.
     Args:
       - sess: tf.Session().
       - flags: flags with model config.
       - logger: custom logger handler.
+      - global_step: global_step of the model.
+      - model_name: name of the model.
     '''
 
     self.sess = sess
     self.flags = flags
     self.logger = logger
-    self.model_name = "default.model"
+    self.model_name = model_name
+    self.min_acc = None
     self.global_step = tf.Variable(global_step,
                                    dtype=tf.int32,
                                    trainable=False,
@@ -43,7 +47,7 @@ class Base(StandardLayers):
     self.var_init.run()
     self.logger.debug('TF graph initialized.')
 
-    self.logger.info('Model initialized.')
+    self.logger.info(self.model_name + ' initialized.')
 
   @property
   def saver(self):
@@ -65,7 +69,7 @@ class Base(StandardLayers):
                     global_step=self.global_step)
     self.logger.debug('Saved with global step.')
 
-    self.logger.info('Model saved.')
+    self.logger.info(self.model_name + ' saved.')
 
   def restore(self):
     '''
@@ -77,13 +81,11 @@ class Base(StandardLayers):
     if ckpt:
       self.logger.debug('Model checkpoint found. Restoring...')
       self.saver.restore(self.sess, ckpt)
-      self.logger.info('Model restored. Resuming from checkpoint.')
-      return True
     else:
       self.logger.error('Resume enabled but no model checkpoints found. \
                          \n Terminating...')
       raise ValueError()
-    self.logger.info('Model restored.')
+    self.logger.info(self.model_name + ' restored.')
 
   def train(self, X, Y, report_func):
     '''
@@ -95,10 +97,10 @@ class Base(StandardLayers):
                    takes two arguments: sub_epoch (self, int).
     '''
 
-    self.logger.info('Starting model training...')
+    self.logger.info(self.model_name + ' starting training...')
 
-    sub_epoch = 0
-    for epoch in range(self.flags.n_iterations):
+    iteration = 0
+    for epoch in range(self.flags.n_epochs):
       for x_batch, y_batch in self.yield_batch(X, Y):
         feed_dict = {
             self.x: x_batch,
@@ -108,16 +110,12 @@ class Base(StandardLayers):
             [self.optim, self.loss],
             feed_dict=feed_dict)
 
-        if sub_epoch % self.flags.s_report_interval == 0:
-          print("Train batch loss: ", loss)
-          report_func(self, sub_epoch)
+        if iteration % self.flags.s_report_interval == 0:
+          report_func(self, iteration)
 
-        if (sub_epoch - 1) % self.flags.s_save_interval == 0:
-          self.save(self.global_step)
+        iteration += 1
 
-        sub_epoch += 1
-
-    self.logger.info('Model finished training!')
+    self.logger.info(self.model_name + ' finished training!')
 
   def predict(self, X):
     '''
@@ -130,7 +128,7 @@ class Base(StandardLayers):
       predictions (list of np.arr): flat list of predictions.
     '''
 
-    self.logger.info('Starting model predictions...')
+    self.logger.debug('Starting model predictions...')
     predictions = []
     for x_batch in self.yield_batch(X):
       feed_dict = {
@@ -138,7 +136,7 @@ class Base(StandardLayers):
       }
       predictions += list(self.sess.run([self.prediction],
                           feed_dict=feed_dict)[0])
-    self.logger.info('Model finished predicting!')
+    self.logger.debug('Model finished predicting!')
     return np.array(predictions)
 
   def evaluate(self, X, Y, prefix=""):
@@ -166,17 +164,18 @@ class Base(StandardLayers):
           feed_dict=feed_dict)
       tpr = float(tpr)
       fpr = float(fpr)
-      # print("loss:", loss)
       all_loss.append(loss)
       all_tpr.append(tpr)
       all_fpr.append(fpr)
       all_acc.append(acc)
 
+    # Average metrics
     avg_loss = np.mean(all_loss)
     avg_tpr = np.mean(all_tpr)
     avg_fpr = np.mean(all_fpr)
     avg_acc = np.mean(all_acc)
 
+    # Create summaries
     summary = tf.Summary()
     summary.value.add(tag="%s/Accuracy" % prefix,
                       simple_value=avg_acc)

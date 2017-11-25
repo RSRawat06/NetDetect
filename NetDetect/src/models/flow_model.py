@@ -7,16 +7,16 @@ class FlowModel(Base, SequenceLayers):
   Model for predicting on flows.
   '''
 
-  def __init__(self, sess, flags, logger):
-    logger.info('Instantiated flow model')
-    Base.__init__(self, sess, flags, logger)
+  def __init__(self, sess, flags, logger, **kargs):
+    logger.debug('Instantiated flow model')
+    Base.__init__(self, sess, flags, logger, **kargs)
 
   def build_model(self):
     '''
     Build the flow model.
     '''
 
-    self.logger.info('Building model...')
+    self.logger.debug('Building model...')
     flags = self.flags
 
     self.x = tf.placeholder(
@@ -70,7 +70,7 @@ class FlowModel(Base, SequenceLayers):
         var_list=tf.trainable_variables(),
         global_step=self.global_step)
 
-    self.logger.info('Model built.')
+    self.logger.debug('Model built.')
 
     return self
 
