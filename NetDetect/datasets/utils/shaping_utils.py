@@ -5,6 +5,9 @@ Module for shaping/manipulating data.
 import numpy as np
 
 
+np.random.seed(1)
+
+
 def build_one_hot(value, candidates):
   '''
   Returns proper one-hot representation of a value.
