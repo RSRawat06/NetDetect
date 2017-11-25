@@ -7,6 +7,8 @@ import tensorflow as tf
 
 def train(FLAGS):
   with tf.Session() as sess:
+    tf.set_random_seed(1)
+
     ##############################
     ### Create model depending on spec.
     if FLAGS.model_name.lower() == "flowattmodel":
