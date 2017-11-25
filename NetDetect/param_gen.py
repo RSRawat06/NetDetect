@@ -22,8 +22,8 @@ def gen_commands(model_type_opts, s_batch_opts,
                 "--n_steps=%s " \
                 "--v_regularization=%s " \
                 "--s_test=4096 " \
-                "--s_report_interval=2400 " \
-                "--n_epochs=25 " \
+                "--s_report_interval=600 " \
+                "--n_epochs=15 " \
                 "--dataset=iscx " \
                 % (model_name, model_type, s_batch, n_steps,
                    v_regularization)
@@ -32,11 +32,10 @@ def gen_commands(model_type_opts, s_batch_opts,
 def test():
   commands = []
   for i in range(0, 5):
-    model_type_opts = ["flowattmodel", "flowmodel"]
-    s_batch_opts = [512, 128, 64]
+    model_type_opts = ["flowattmodel"]
+    s_batch_opts = [512]
     n_steps_opts = [16, 28]
-    v_regularization_opts = [0.1, 0.05, 0.01, 0.15, 0.4]
-
+    v_regularization_opts = [0.1, 0.05, 0.01, 0.15, 0.2, 0.25, 0.3, 0.4]
     for i, command_ in enumerate(gen_commands(
       model_type_opts, s_batch_opts, n_steps_opts, v_regularization_opts,
       i, 5)):
@@ -46,10 +45,10 @@ def test():
 
 
 def main(dice, total):
-  model_type_opts = ["flowattmodel", "flowmodel"]
-  s_batch_opts = [512, 128, 64]
+  model_type_opts = ["flowattmodel"]
+  s_batch_opts = [512]
   n_steps_opts = [16, 28]
-  v_regularization_opts = [0.1, 0.05, 0.01, 0.15, 0.4]
+  v_regularization_opts = [0.1, 0.05, 0.01, 0.15, 0.2, 0.25, 0.3, 0.4]
 
   for i, command_ in enumerate(gen_commands(
     model_type_opts, s_batch_opts, n_steps_opts, v_regularization_opts,
