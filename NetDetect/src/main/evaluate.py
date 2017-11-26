@@ -7,6 +7,8 @@ import tensorflow as tf
 
 def evaluate(FLAGS):
   with tf.Session() as sess:
+    tf.set_random_seed(1)
+
     ##############################
     ### Log hyperparameters.
     param_desc = FLAGS.model_name + ":   "
