@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
   tf.app.flags.DEFINE_string("dataset", "blank",
                              "Which dataset to use: iscx/isot")
-  tf.app.flags.DEFINE_string("model_name", "default.model",
+  tf.app.flags.DEFINE_string("model_name", "default",
                              "Name of model to be used in logs.")
   tf.app.flags.DEFINE_string("iter_num", "0",
                              "Iteration number of save.")

@@ -105,16 +105,17 @@ def train(FLAGS):
     ##############################
     ### Upload model
     print("Location of best save:", FLAGS.checkpoints_dir + FLAGS.model_name +
-          "-" + model.min_iter)
+          "-" + str(model.min_iter))
     block_blob_service = BlockBlobService(
         account_name=azure_account_name,
         account_key=azure_account_key
     )
-    block_blob_service.create_blob_from_path(
-        "models",
-        FLAGS.model_name,
-        FLAGS.checkpoints_dir + FLAGS.model_name + "-" + model.min_iter
-    )
+    for suffix in [".meta", ".index", ".data-00000-of-00001"]:
+      block_blob_service.create_blob_from_path(
+          "models",
+          FLAGS.model_name,
+          FLAGS.checkpoints_dir + FLAGS.model_name + "-" + str(model.min_iter) + suffix
+      )
     ##############################
 
 
@@ -123,7 +124,7 @@ if __name__ == "__main__":
 
   tf.app.flags.DEFINE_string("dataset", "blank",
                              "Which dataset to use: iscx/isot")
-  tf.app.flags.DEFINE_string("model_name", "default.model",
+  tf.app.flags.DEFINE_string("model_name", "default",
                              "Name of model to be used in logs.")
   tf.app.flags.DEFINE_string("model_type", "FlowAttModel",
                              "FlowAttModel/FlowModel")
