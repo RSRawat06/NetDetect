@@ -10,7 +10,7 @@ services:
       dockerfile: ./NetDetect/Dockerfile
     volumes:
       - ./NetDetect/datasets:/NetDetect/datasets
-    command: sh -c "python3 NetDetect/param_gen.py -dice 0 -total 5 | bash"
+    command: sh -c "python3 NetDetect/param_gen.py -dice 0 -total 7 | bash"
     tty: true
 
   netdetect2:
@@ -19,7 +19,7 @@ services:
       dockerfile: ./NetDetect/Dockerfile
     volumes:
       - ./NetDetect/datasets:/NetDetect/datasets
-    command: sh -c "python3 NetDetect/param_gen.py -dice 1 -total 5 | bash"
+    command: sh -c "python3 NetDetect/param_gen.py -dice 1 -total 7 | bash"
     tty: true
 
   netdetect3:
@@ -28,7 +28,7 @@ services:
       dockerfile: ./NetDetect/Dockerfile
     volumes:
       - ./NetDetect/datasets:/NetDetect/datasets
-    command: sh -c "python3 NetDetect/param_gen.py -dice 2 -total 5 | bash"
+    command: sh -c "python3 NetDetect/param_gen.py -dice 2 -total 7 | bash"
     tty: true
 
   netdetect4:
@@ -37,7 +37,7 @@ services:
       dockerfile: ./NetDetect/Dockerfile
     volumes:
       - ./NetDetect/datasets:/NetDetect/datasets
-    command: sh -c "python3 NetDetect/param_gen.py -dice 3 -total 5 | bash"
+    command: sh -c "python3 NetDetect/param_gen.py -dice 3 -total 7 | bash"
     tty: true
 
   netdetect5:
@@ -46,6 +46,24 @@ services:
       dockerfile: ./NetDetect/Dockerfile
     volumes:
       - ./NetDetect/datasets:/NetDetect/datasets
-    command: sh -c "python3 NetDetect/param_gen.py -dice 4 -total 5 | bash"
+    command: sh -c "python3 NetDetect/param_gen.py -dice 4 -total 7 | bash"
+    tty: true
+
+  netdetect6:
+    build:
+      context: .
+      dockerfile: ./NetDetect/Dockerfile
+    volumes:
+      - ./NetDetect/datasets:/NetDetect/datasets
+    command: sh -c "python3 NetDetect/param_gen.py -dice 5 -total 7 | bash"
+    tty: true
+
+  netdetect7:
+    build:
+      context: .
+      dockerfile: ./NetDetect/Dockerfile
+    volumes:
+      - ./NetDetect/datasets:/NetDetect/datasets
+    command: sh -c "python3 NetDetect/param_gen.py -dice 6 -total 7 | bash"
     tty: true
 

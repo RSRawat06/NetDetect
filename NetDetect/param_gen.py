@@ -23,32 +23,17 @@ def gen_commands(model_type_opts, s_batch_opts,
                 "--v_regularization=%s " \
                 "--s_test=4096 " \
                 "--s_report_interval=600 " \
-                "--n_epochs=15 " \
+                "--n_epochs=10 " \
                 "--dataset=iscx " \
                 % (model_name, model_type, s_batch, n_steps,
                    v_regularization)
 
 
-def test():
-  commands = []
-  for i in range(0, 5):
-    model_type_opts = ["flowattmodel"]
-    s_batch_opts = [512]
-    n_steps_opts = [16, 28]
-    v_regularization_opts = [0.1, 0.05, 0.01, 0.15, 0.2, 0.25, 0.3, 0.4]
-    for i, command_ in enumerate(gen_commands(
-      model_type_opts, s_batch_opts, n_steps_opts, v_regularization_opts,
-      i, 5)):
-      commands.append(command_)
-  assert(len(set(commands)) == len(commands))
-  assert(len(set(commands)) == 2 * 3 * 2 * 5)
-
-
 def main(dice, total):
   model_type_opts = ["flowattmodel"]
   s_batch_opts = [512]
-  n_steps_opts = [16, 28]
-  v_regularization_opts = [0.1, 0.05, 0.01, 0.15, 0.2, 0.25, 0.3, 0.4]
+  n_steps_opts = [16]
+  v_regularization_opts = [0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6]
 
   for i, command_ in enumerate(gen_commands(
     model_type_opts, s_batch_opts, n_steps_opts, v_regularization_opts,
@@ -57,7 +42,6 @@ def main(dice, total):
 
 
 if __name__ == "__main__":
-  test()
   parser = argparse.ArgumentParser()
   parser.add_argument("-total", "--total", help="Total workers",
                       type=int, required=True)
