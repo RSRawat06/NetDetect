@@ -71,20 +71,13 @@ class Base(StandardLayers):
 
     self.logger.info(self.model_name + ' saved.')
 
-  def restore(self):
+  def restore(self, ckpt):
     '''
     Restore TF computation graph from saved checkpoint.
     '''
 
     self.logger.debug('Restoring model...')
-    ckpt = tf.train.latest_checkpoint(self.flags.checkpoints_dir)
-    if ckpt:
-      self.logger.debug('Model checkpoint found. Restoring...')
-      self.saver.restore(self.sess, ckpt)
-    else:
-      self.logger.error('Resume enabled but no model checkpoints found. \
-                         \n Terminating...')
-      raise ValueError()
+    self.saver.restore(self.sess, ckpt)
     self.logger.info(self.model_name + ' restored.')
 
   def train(self, X, Y, report_func):
@@ -99,7 +92,6 @@ class Base(StandardLayers):
 
     self.logger.info(self.model_name + ' starting training...')
 
-    iteration = 0
     for epoch in range(self.flags.n_epochs):
       for x_batch, y_batch in self.yield_batch(X, Y):
         feed_dict = {
@@ -110,10 +102,9 @@ class Base(StandardLayers):
             [self.optim, self.loss],
             feed_dict=feed_dict)
 
+        iteration = tf.train.global_step(self.sess, self.global_step)
         if iteration % self.flags.s_report_interval == 0:
           report_func(self, iteration)
-
-        iteration += 1
 
     self.logger.info(self.model_name + ' finished training!')
 

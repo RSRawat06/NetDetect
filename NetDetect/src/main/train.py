@@ -1,7 +1,9 @@
 from ...src.models import FlowAttModel, FlowModel
+from ...credentials import azure_account_name, azure_account_key
 from ...datasets import iscx, isot
 from .logger import train_logger
 from . import config
+from azure.storage.blob import BlockBlobService
 import tensorflow as tf
 
 
@@ -75,9 +77,15 @@ def train(FLAGS):
       # Determine min acc or save
       if self.min_acc is None:
         self.min_acc = acc
+        self.min_tpr = tpr
+        self.min_fpr = fpr
+        self.min_iter = iteration
       elif (acc > self.min_acc):
         self.min_acc = acc
-        self.save(self.global_step)
+        self.min_tpr = tpr
+        self.min_fpr = fpr
+        self.min_iter = iteration
+        self.save(iteration)
     ##############################
 
     ##############################
@@ -88,6 +96,26 @@ def train(FLAGS):
         __report_func
     )
     print(FLAGS.model_name + ": training complete.")
+    print(
+        "Best test accuracy: %f, "
+        "test TPR: %s, test FPR: %s"
+        % (model.min_acc, str(model.min_tpr), str(model.min_fpr)))
+    ##############################
+
+    ##############################
+    ### Upload model
+    print("Location of best save:", FLAGS.checkpoints_dir + FLAGS.model_name +
+          "-" + str(model.min_iter))
+    block_blob_service = BlockBlobService(
+        account_name=azure_account_name,
+        account_key=azure_account_key
+    )
+    for suffix in [".meta", ".index", ".data-00000-of-00001"]:
+      block_blob_service.create_blob_from_path(
+          "models",
+          FLAGS.model_name,
+          FLAGS.checkpoints_dir + FLAGS.model_name + "-" + str(model.min_iter) + suffix
+      )
     ##############################
 
 
@@ -96,7 +124,7 @@ if __name__ == "__main__":
 
   tf.app.flags.DEFINE_string("dataset", "blank",
                              "Which dataset to use: iscx/isot")
-  tf.app.flags.DEFINE_string("model_name", "default.model",
+  tf.app.flags.DEFINE_string("model_name", "default",
                              "Name of model to be used in logs.")
   tf.app.flags.DEFINE_string("model_type", "FlowAttModel",
                              "FlowAttModel/FlowModel")

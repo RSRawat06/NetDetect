@@ -2,13 +2,14 @@
 This module offers miscellanious networking functions.
 """
 
+from ...credentials import azure_account_name, azure_account_key
 import requests
 from azure.storage.blob import ContentSettings, BlockBlobService
 
 
 block_blob_service = BlockBlobService(
-    account_name='netdetect',
-    account_key='REDACTED'
+    account_name=azure_account_name,
+    account_key=azure_account_key
 )
 
 
