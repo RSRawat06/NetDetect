@@ -21,9 +21,9 @@ def gen_commands(model_type_opts, s_batch_opts,
                 "--s_batch=%s " \
                 "--n_steps=%s " \
                 "--v_regularization=%s " \
-                "--s_test=4096 " \
+                "--s_test=2048 " \
                 "--s_report_interval=600 " \
-                "--n_epochs=10 " \
+                "--n_epochs=7 " \
                 "--dataset=iscx " \
                 % (model_name, model_type, s_batch, n_steps,
                    v_regularization)
