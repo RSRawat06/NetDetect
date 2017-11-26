@@ -1,7 +1,9 @@
 from ...src.models import FlowAttModel, FlowModel
+from ...credentials import azure_account_name, azure_account_key
 from ...datasets import iscx, isot
 from .logger import train_logger
 from . import config
+from azure.storage.blob import ContentSettings, BlockBlobService
 import tensorflow as tf
 
 
@@ -75,9 +77,13 @@ def train(FLAGS):
       # Determine min acc or save
       if self.min_acc is None:
         self.min_acc = acc
+        self.min_tpr = tpr
+        self.min_fpr = fpr
       elif (acc > self.min_acc):
         self.min_acc = acc
-        self.save(self.global_step)
+        self.min_tpr = tpr
+        self.min_fpr = fpr
+        self.save(iteration)
     ##############################
 
     ##############################
@@ -88,6 +94,23 @@ def train(FLAGS):
         __report_func
     )
     print(FLAGS.model_name + ": training complete.")
+    ##############################
+
+    ##############################
+    ### Upload model
+    print(
+      "Best test accuracy: %f, "
+      "test TPR: %s, test FPR: %s"
+      % (model.min_acc, str(model.min_tpr), str(model.min_fpr)))
+    block_blob_service = BlockBlobService(
+        account_name=azure_account_name,
+        account_key=azure_account_key
+    )
+    block_blob_service.create_blob_from_path(
+      "models",
+      FLAGS.model_name,
+      tf.train.latest_checkpoint(FLAGS.checkpoints_dir)
+    ) 
     ##############################
 
 
