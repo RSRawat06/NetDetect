@@ -23,7 +23,7 @@ def gen_commands(model_type_opts, s_batch_opts,
                 "--v_regularization=%s " \
                 "--s_test=2048 " \
                 "--s_report_interval=400 " \
-                "--n_epochs=7 " \
+                "--n_epochs=10 " \
                 "--dataset=iscx " \
                 % (model_name, model_type, s_batch, n_steps,
                    v_regularization)
@@ -31,7 +31,7 @@ def gen_commands(model_type_opts, s_batch_opts,
 
 def main(dice, total):
   model_type_opts = ["flowattmodel"]
-  s_batch_opts = [1024]
+  s_batch_opts = [512, 1024]
   n_steps_opts = [16]
   v_regularization_opts = [0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6]
 
