@@ -44,7 +44,7 @@ def evaluate(FLAGS):
     ##############################
     ### Build model
     model.initialize()
-    model.restore()
+    model.restore(FLAGS.checkpoints_dir + FLAGS.model_name + "-" + FLAGS.iter_num)
     ##############################
 
     ##############################
@@ -66,6 +66,8 @@ if __name__ == "__main__":
                              "Which dataset to use: iscx/isot")
   tf.app.flags.DEFINE_string("model_name", "default.model",
                              "Name of model to be used in logs.")
+  tf.app.flags.DEFINE_string("iter_num", "0",
+                             "Iteration number of save.")
   tf.app.flags.DEFINE_string("model_type", "FlowAttModel",
                              "FlowAttModel/FlowModel")
   tf.app.flags.DEFINE_integer("s_batch", 32,
