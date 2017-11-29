@@ -1,7 +1,9 @@
 from ...src.models import FlowAttModel, FlowModel
+from ...credentials import azure_account_name, azure_account_key
 from ...datasets import iscx, isot
 from .logger import eval_logger
 from . import config
+from azure.storage.blob import BlockBlobService
 import tensorflow as tf
 
 
@@ -39,6 +41,25 @@ def evaluate(FLAGS):
       test_dataset = isot.load_full_test(FLAGS.n_steps)
     else:
       raise ValueError("Invalid dataset.")
+    ##############################
+
+    ##############################
+    ### Download model
+    block_blob_service = BlockBlobService(
+        account_name=azure_account_name,
+        account_key=azure_account_key
+    )
+
+    print([x.name for x in
+                       block_blob_service.list_blobs("models")])
+    assert(FLAGS.model_name in [x.name for x in
+                       block_blob_service.list_blobs("models")])
+    for suffix in [".meta", ".index", ".data-00000-of-00001"]:
+      block_blob_service.get_blob_to_path(
+          "models",
+          FLAGS.model_name + "-" + str(FLAGS.iter_num) + suffix,
+          FLAGS.checkpoints_dir + FLAGS.model_name + "-" + str(FLAGS.iter_num) + suffix
+      )
     ##############################
 
     ##############################

@@ -113,7 +113,7 @@ def train(FLAGS):
     for suffix in [".meta", ".index", ".data-00000-of-00001"]:
       block_blob_service.create_blob_from_path(
           "models",
-          FLAGS.model_name,
+          FLAGS.model_name + "-" + str(model.min_iter) + suffix,
           FLAGS.checkpoints_dir + FLAGS.model_name + "-" + str(model.min_iter) + suffix
       )
     ##############################
