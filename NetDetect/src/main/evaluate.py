@@ -50,15 +50,15 @@ def evaluate(FLAGS):
         account_key=azure_account_key
     )
 
-    print([x.name for x in
-                       block_blob_service.list_blobs("models")])
-    assert(FLAGS.model_name in [x.name for x in
-                       block_blob_service.list_blobs("models")])
     for suffix in [".meta", ".index", ".data-00000-of-00001"]:
+      filename = FLAGS.model_name + "-" + str(FLAGS.iter_num) + suffix
+      print(filename)
+      assert(filename in [x.name for x in
+                       block_blob_service.list_blobs("models")])
       block_blob_service.get_blob_to_path(
           "models",
-          FLAGS.model_name + "-" + str(FLAGS.iter_num) + suffix,
-          FLAGS.checkpoints_dir + FLAGS.model_name + "-" + str(FLAGS.iter_num) + suffix
+          filename,
+          FLAGS.checkpoints_dir + filename
       )
     ##############################
 
