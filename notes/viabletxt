@@ -1,0 +1,24 @@
+b:128,t:flowattmodel,s:16,r:0.018-92720
+b:128,t:flowattmodel,s:16,r:0.032-32680
+b:128,t:flowattmodel,s:16,r:0.0403-44440
+b:128,t:flowattmodel,s:16,r:0.0413-43600
+b:128,t:flowattmodel,s:16,r:0.1-132840
+b:128,t:flowattmodel,s:16,r:0.0383-45080
+b:128,t:flowattmodel,s:16,r:0.038-44280
+b:128,t:flowattmodel,s:16,r:0.018000000000000002-92720      
+b:128,t:flowattmodel,s:16,r:0.1-132840
+b:64,t:flowattmodel,s:16,r:0.005-18240
+b:64,t:flowattmodel,s:16,r:0.023-101320
+
+
+python3 -m NetDetect.src.main.evaluate --n_steps=16 --dataset=iscx --model_type=flowattmodel --s_batch=128 --iter_num=92720 --model_name=b:128,t:flowattmodel,s:16,r:0.018
+python3 -m NetDetect.src.main.evaluate --n_steps=16 --dataset=iscx --model_type=flowattmodel --s_batch=128 --iter_num=32680 --model_name=b:128,t:flowattmodel,s:16,r:0.032
+python3 -m NetDetect.src.main.evaluate --n_steps=16 --dataset=iscx --model_type=flowattmodel --s_batch=128 --iter_num=44440 --model_name=b:128,t:flowattmodel,s:16,r:0.0403
+python3 -m NetDetect.src.main.evaluate --n_steps=16 --dataset=iscx --model_type=flowattmodel --s_batch=128 --iter_num=43600 --model_name=b:128,t:flowattmodel,s:16,r:0.0413
+python3 -m NetDetect.src.main.evaluate --n_steps=16 --dataset=iscx --model_type=flowattmodel --s_batch=128 --iter_num=132840 --model_name=b:128,t:flowattmodel,s:16,r:0.1
+python3 -m NetDetect.src.main.evaluate --n_steps=16 --dataset=iscx --model_type=flowattmodel --s_batch=128 --iter_num=45080 --model_name=b:128,t:flowattmodel,s:16,r:0.0383
+python3 -m NetDetect.src.main.evaluate --n_steps=16 --dataset=iscx --model_type=flowattmodel --s_batch=128 --iter_num=44280 --model_name=b:128,t:flowattmodel,s:16,r:0.038
+python3 -m NetDetect.src.main.evaluate --n_steps=16 --dataset=iscx --model_type=flowattmodel --s_batch=128 --iter_num=92720 --model_name=b:128,t:flowattmodel,s:16,r:0.018000000000000002
+
+
+
