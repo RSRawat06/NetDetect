@@ -1,7 +1,5 @@
 # NetDetect: End-to-end differentiable model for botnet detection.
-NetDetect achieves state-of-art botnet detection using bidirectional GRUs with additive attention.
-
-[![Maintenance Intended](http://maintained.tech/badge.svg)](http://maintained.tech/)
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
 
 ### Requirements
 * Docker-CE version 17.06.2-ce
