@@ -7,6 +7,8 @@ RUN apt-get update \
     ca-certificates \
     gcc \
     git \
+    sudo \
+    wget \
     libpq-dev \
     make \
     ssh \
