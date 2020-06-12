@@ -1,8 +1,8 @@
 From tensorflow/tensorflow:latest-py3
 
 # Install necessary packages
-RUN apt update
-RUN apt install gcc make libc-dev g++ bzip2 libssl-dev build-essential wget -y
+RUN apt-get update && apt-get install -y wget sudo 
+RUN apt install gcc make libc-dev g++ bzip2 libssl-dev build-essential -y
 
 # Hop into /NetDetect
 WORKDIR /NetDetect
